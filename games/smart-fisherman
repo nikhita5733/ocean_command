@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Smart Fisherman — Ocean Intelligence Game</title>
+<style>
+@font-face{font-family:'sys';src:local('Arial');}
+:root{
+  --navy-deep:#050e1a;
+  --navy:#0a1f33;
+  --navy-panel:#0d2740;
+  --ocean-blue:#0f4c75;
+  --cyan:#1fd1ff;
+  --turquoise:#2ec4b6;
+  --pfz-green:#2ee6a6;
+  --pfz-yellow:#ffd93d;
+  --pfz-orange:#ff9f43;
+  --pfz-red:#ff4d5e;
+  --amber:#ffb238;
+  --danger:#ff4d5e;
+  --ink:#eaf6ff;
+  --ink-dim:#9db4c9;
+  --glass-bg:rgba(13,39,64,0.55);
+  --glass-border:rgba(160,220,255,0.14);
+  --radius:16px;
+  --font-display:'Rajdhani','Segoe UI',sans-serif;
+  --font-body:'Inter','Segoe UI',sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:var(--navy-deep);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+#app{position:relative;width:100vw;height:100vh;overflow:hidden;}
+.screen{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;
+  animation:fadeIn .5s ease;
+}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-family:var(--font-display);
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  border:1px solid var(--glass-border);
+  background:linear-gradient(180deg, rgba(31,209,255,0.16), rgba(31,209,255,0.04));
+  color:var(--ink);
+  padding:14px 30px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:15px;
+  backdrop-filter:blur(6px);
+  transition:transform .15s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+  position:relative;
+  overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent 40%, rgba(255,255,255,.25) 50%, transparent 60%);
+  transform:translateX(-120%);
+  transition:transform .6s ease;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,209,255,.25);border-color:var(--cyan);}
+.btn:hover::after{transform:translateX(120%);}
+.btn:active{transform:translateY(0px) scale(.98);}
+.btn-primary{
+  background:linear-gradient(180deg, #26e0c9, #0fa3a3);
+  border-color:transparent;color:#04201d;box-shadow:0 8px 30px rgba(38,224,201,.35);
+}
+.btn-primary:hover{box-shadow:0 10px 36px rgba(38,224,201,.5);}
+.btn-ghost{background:transparent;}
+.btn-danger{background:linear-gradient(180deg,#ff6b6b,#e63946);border-color:transparent;color:#2a0a0d;}
+.btn-sm{padding:8px 16px;font-size:12px;border-radius:8px;}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+.icon-btn{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  font-size:22px;cursor:pointer;transition:all .2s ease;color:var(--ink);
+  backdrop-filter:blur(8px);
+}
+.icon-btn:hover{border-color:var(--cyan);background:rgba(31,209,255,.12);transform:translateY(-2px);}
+.icon-btn.active{border-color:var(--cyan);background:rgba(31,209,255,.22);box-shadow:0 0 18px rgba(31,209,255,.35);}
+
+/* ---------- Glass panel ---------- */
+.panel{
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius);
+  backdrop-filter:blur(14px) saturate(140%);
+  box-shadow:0 10px 40px rgba(0,0,0,.35);
+}
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:rgba(160,220,255,.25);border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ================= LANDING ================= */
+#screen-landing{justify-content:center;align-items:center;}
+#landing-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.landing-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 30%, rgba(2,8,16,.55) 100%);z-index:1;pointer-events:none;}
+.landing-content{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px;padding:20px;}
+.game-title{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(42px,9vw,96px);
+  letter-spacing:.06em;
+  background:linear-gradient(180deg,#fff 10%, #bdeeff 55%, #1fd1ff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 60px rgba(31,209,255,.35);
+  animation:titleRise 1.1s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes titleRise{from{opacity:0;transform:translateY(24px) scale(.97);letter-spacing:.15em;}to{opacity:1;transform:translateY(0) scale(1);letter-spacing:.06em;}}
+.game-subtitle{
+  font-size:clamp(13px,2vw,17px);
+  color:var(--ink-dim);
+  letter-spacing:.05em;
+  font-weight:500;
+  animation:fadeIn 1.4s ease .3s both;
+}
+.landing-buttons{display:flex;flex-direction:column;gap:12px;margin-top:18px;width:min(320px,80vw);animation:fadeIn 1.6s ease .5s both;}
+.eyebrow{
+  font-family:var(--font-display);letter-spacing:.35em;font-size:11px;color:var(--turquoise);
+  text-transform:uppercase;animation:fadeIn 1s ease 0s both;
+}
+.landing-topbar{position:absolute;top:22px;right:26px;z-index:3;display:flex;gap:10px;}
+
+/* ================= MODAL BASE ================= */
+.modal-overlay{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(2,6,12,.65);
+  backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+  animation:fadeIn .25s ease;
+}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  width:100%;max-width:560px;max-height:88vh;overflow:auto;
+  background:linear-gradient(180deg, rgba(15,44,71,.92), rgba(8,22,38,.96));
+  border:1px solid var(--glass-border);
+  border-radius:20px;padding:28px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55);
+  animation:modalPop .3s cubic-bezier(.2,.9,.25,1.1);
+}
+.modal-box.wide{max-width:880px;}
+@keyframes modalPop{from{opacity:0;transform:scale(.94) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:.03em;margin-bottom:4px;}
+.modal-sub{color:var(--ink-dim);font-size:13px;margin-bottom:18px;}
+.modal-close{position:absolute;}
+.close-x{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+.close-x:hover{background:rgba(255,255,255,.14);}
+
+/* ================= PROFILE SETUP ================= */
+#screen-profile{justify-content:center;align-items:center;background:radial-gradient(ellipse at 50% 0%, #0e2c46 0%, var(--navy-deep) 70%);}
+.profile-card{width:min(460px,92vw);padding:34px;text-align:center;}
+.profile-card input{
+  width:100%;padding:14px 16px;border-radius:10px;border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.04);color:var(--ink);font-size:16px;font-family:var(--font-body);
+  margin:18px 0 22px;outline:none;transition:border-color .2s;
+}
+.profile-card input:focus{border-color:var(--cyan);}
+.avatar-row{display:flex;gap:12px;justify-content:center;margin-bottom:6px;}
+.avatar-opt{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(255,255,255,.05);border:2px solid transparent;cursor:pointer;transition:all .2s;}
+.avatar-opt.selected{border-color:var(--cyan);background:rgba(31,209,255,.15);transform:scale(1.08);}
+
+/* ================= GAME SCREEN ================= */
+#screen-game{background:var(--navy-deep);}
+#game-canvas-wrap{position:absolute;inset:0;}
+#ocean-canvas{width:100%;height:100%;display:block;}
+
+.hud-top{
+  position:absolute;top:0;left:0;right:0;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;gap:12px;
+  pointer-events:none;
+}
+.hud-top>*{pointer-events:auto;}
+.hud-stats{display:flex;gap:10px;flex-wrap:wrap;}
+.stat-chip{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  min-width:98px;
+}
+.stat-chip .val{font-family:var(--font-display);font-weight:700;font-size:16px;}
+.stat-chip .lbl{font-size:9px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.08em;}
+.stat-icon{font-size:18px;}
+.bar-track{width:56px;height:5px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px;}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+#fuel-fill{background:linear-gradient(90deg,#2ee6a6,#1fd1ff);}
+#fuel-fill.low{background:linear-gradient(90deg,#ffb238,#ff4d5e);}
+#health-fill{background:linear-gradient(90deg,#2ee6a6,#7be07a);}
+
+.hud-topright{display:flex;gap:8px;}
+
+.hud-left{
+  position:absolute;left:14px;top:96px;z-index:5;
+  display:flex;flex-direction:column;gap:8px;
+}
+.layer-btn{
+  width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;cursor:pointer;background:var(--glass-bg);border:1px solid var(--glass-border);
+  transition:all .2s;position:relative;
+}
+.layer-btn.active{border-color:var(--pfz-green);box-shadow:0 0 14px rgba(46,230,166,.4);background:rgba(46,230,166,.12);}
+.layer-btn:hover{transform:translateX(3px);}
+
+.hud-info-panel{
+  position:absolute;right:14px;top:96px;z-index:5;
+  width:230px;padding:16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.info-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.info-row .k{color:var(--ink-dim);display:flex;align-items:center;gap:6px;}
+.info-row .v{font-family:var(--font-display);font-weight:700;font-size:14px;}
+.info-divider{height:1px;background:var(--glass-border);margin:2px 0;}
+.zone-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;
+}
+
+.hud-bottom{
+  position:absolute;bottom:0;left:0;right:0;z-index:6;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:16px;
+}
+.dock-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:11px 18px;min-width:74px;
+  cursor:pointer;transition:all .2s;
+}
+.dock-btn .di{font-size:22px;}
+.dock-btn .dl{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-dim);font-weight:600;}
+.dock-btn:hover{transform:translateY(-4px);border-color:var(--cyan);}
+.dock-btn.active{border-color:var(--turquoise);background:rgba(46,196,182,.18);}
+.dock-btn:disabled{opacity:.3;pointer-events:none;}
+
+.mission-tracker{
+  position:absolute;left:14px;bottom:96px;z-index:5;width:250px;padding:14px 16px;
+}
+.mission-tracker .mt-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--turquoise);letter-spacing:.03em;margin-bottom:6px;display:flex;justify-content:space-between;}
+.mt-obj{font-size:11.5px;color:var(--ink-dim);display:flex;gap:6px;align-items:flex-start;margin-top:4px;line-height:1.4;}
+.mt-obj.done{color:var(--pfz-green);text-decoration:line-through;opacity:.7;}
+
+.toast-stack{position:absolute;top:96px;left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(420px,92vw);}
+.toast{
+  padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:10px;animation:toastIn .35s ease;width:100%;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);}}
+.toast.warn{border-left:4px solid var(--amber);}
+.toast.danger{border-left:4px solid var(--danger);}
+.toast.good{border-left:4px solid var(--pfz-green);}
+.toast.info{border-left:4px solid var(--cyan);}
+
+/* ================= SONAR ================= */
+.sonar-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+#sonar-canvas{border-radius:50%;background:radial-gradient(circle at 50% 50%, #04141f 0%, #01080d 100%);box-shadow:0 0 0 3px rgba(31,209,255,.25), 0 0 40px rgba(31,209,255,.15) inset;}
+.sonar-readout{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.sonar-readout .sr-item{text-align:center;}
+.sonar-readout .sr-val{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--cyan);}
+.sonar-readout .sr-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;}
+
+/* ================= FISHING MINIGAME ================= */
+.fish-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.fish-info{display:flex;align-items:center;gap:12px;}
+.fish-emoji{font-size:38px;}
+.tension-bar{
+  position:relative;width:100%;max-width:420px;height:34px;border-radius:20px;
+  background:rgba(255,255,255,.06);border:1px solid var(--glass-border);overflow:hidden;
+}
+.tension-zone{position:absolute;top:0;bottom:0;background:rgba(46,230,166,.28);border-left:2px solid var(--pfz-green);border-right:2px solid var(--pfz-green);}
+.tension-marker{position:absolute;top:-4px;width:6px;height:42px;background:var(--cyan);border-radius:4px;box-shadow:0 0 10px var(--cyan);transition:left .02s linear;}
+.progress-bar{width:100%;max-width:420px;height:16px;border-radius:10px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid var(--glass-border);}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2ee6a6,#1fd1ff);width:0%;transition:width .1s linear;}
+.reel-btn{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #26e0c9, #0a7d78);
+  border:4px solid rgba(255,255,255,.2);
+  font-family:var(--font-display);font-weight:700;font-size:16px;color:#04201d;
+  cursor:pointer;box-shadow:0 10px 30px rgba(38,224,201,.4);
+  transition:transform .1s;
+  touch-action:none;
+}
+.reel-btn:active{transform:scale(.94);}
+.line-health-track{width:100%;max-width:420px;height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;}
+.line-health-fill{height:100%;background:linear-gradient(90deg,#ffd93d,#ff9f43);width:100%;transition:width .1s linear;}
+
+/* ================= TRIP SUMMARY ================= */
+.score-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--glass-border);font-size:14px;}
+.score-row .sr-label{display:flex;align-items:center;gap:8px;color:var(--ink-dim);}
+.score-row .sr-num{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--cyan);}
+.score-total{display:flex;justify-content:space-between;align-items:center;padding:16px 0 4px;font-family:var(--font-display);font-size:22px;font-weight:700;}
+.tip-box{
+  margin-top:14px;padding:14px 16px;border-radius:12px;background:rgba(255,178,56,.08);
+  border:1px solid rgba(255,178,56,.3);font-size:12.5px;line-height:1.5;color:#ffdca6;
+}
+.tip-box.good{background:rgba(46,230,166,.08);border-color:rgba(46,230,166,.3);color:#bdf5e0;}
+
+/* ================= GARAGE ================= */
+.garage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+.stat-block{padding:12px 14px;}
+.stat-block .sb-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.stat-block .sb-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;}
+.stat-block .sb-fill{height:100%;background:linear-gradient(90deg,#1fd1ff,#2ee6a6);}
+.upgrade-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-top:10px;}
+.upgrade-item .ui-left{display:flex;gap:10px;align-items:center;}
+.upgrade-item .ui-name{font-weight:700;font-size:13.5px;}
+.upgrade-item .ui-desc{font-size:11px;color:var(--ink-dim);}
+
+/* ================= KNOWLEDGE ================= */
+.know-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:14px;}
+.know-card{
+  perspective:1000px;height:150px;cursor:pointer;
+}
+.know-card-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;}
+.know-card.flipped .know-card-inner{transform:rotateY(180deg);}
+.know-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px;background:var(--glass-bg);border:1px solid var(--glass-border);}
+.know-face.back{transform:rotateY(180deg);font-size:11.5px;line-height:1.4;color:var(--ink-dim);background:linear-gradient(160deg, rgba(31,209,255,.12), rgba(46,196,182,.08));}
+.know-emoji{font-size:30px;}
+
+/* ================= LEADERBOARD ================= */
+.lb-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.lb-tab{padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid transparent;}
+.lb-tab.active{background:rgba(31,209,255,.15);border-color:var(--cyan);}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;}
+.lb-row.me{background:rgba(46,230,166,.1);border:1px solid rgba(46,230,166,.35);}
+.lb-rank{font-family:var(--font-display);font-weight:700;width:28px;text-align:center;}
+.lb-name{flex:1;font-weight:600;font-size:13px;}
+.lb-score{font-family:var(--font-display);font-weight:700;color:var(--cyan);}
+
+/* ================= MISSION SELECT ================= */
+.mission-grid{display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:56vh;overflow:auto;}
+.mission-item{display:flex;align-items:center;gap:14px;padding:14px;cursor:pointer;transition:all .2s;}
+.mission-item:hover{border-color:var(--cyan);}
+.mission-item.locked{opacity:.45;cursor:not-allowed;}
+.mission-num{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--turquoise);width:38px;}
+.mission-item .mi-title{font-weight:700;font-size:14px;}
+.mission-item .mi-desc{font-size:11.5px;color:var(--ink-dim);}
+
+/* ================= SETTINGS ================= */
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--glass-border);}
+.toggle{width:48px;height:26px;border-radius:20px;background:rgba(255,255,255,.1);position:relative;cursor:pointer;transition:background .2s;}
+.toggle.on{background:var(--turquoise);}
+.toggle .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;}
+.toggle.on .knob{left:25px;}
+
+/* ================= WEATHER ALERT ================= */
+.alert-icon{font-size:44px;text-align:center;margin-bottom:6px;}
+
+/* Level up */
+.levelup-badge{width:110px;height:110px;border-radius:50%;margin:0 auto 14px;background:radial-gradient(circle at 35% 30%, #ffe27a,#ff9f43);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:34px;font-weight:700;color:#3a1c00;box-shadow:0 0 60px rgba(255,178,56,.5);animation:levelPop .6s cubic-bezier(.3,1.4,.4,1);}
+@keyframes levelPop{from{transform:scale(0) rotate(-30deg);}to{transform:scale(1) rotate(0);}}
+
+/* Loading */
+#boot-loader{position:fixed;inset:0;z-index:100;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.loader-ring{width:52px;height:52px;border-radius:50%;border:3px solid rgba(31,209,255,.2);border-top-color:var(--cyan);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---------- Mobile ---------- */
+@media (max-width:720px){
+  .hud-left{top:auto;bottom:150px;left:8px;flex-direction:row;flex-wrap:wrap;width:150px;}
+  .hud-info-panel{width:150px;top:70px;right:8px;padding:10px;font-size:11px;}
+  .mission-tracker{width:150px;left:8px;bottom:150px;display:none;}
+  .hud-bottom{gap:6px;padding:10px 6px;overflow-x:auto;justify-content:flex-start;}
+  .dock-btn{min-width:60px;padding:8px 10px;}
+  .stat-chip{min-width:74px;padding:7px 10px;}
+  .stat-chip .val{font-size:13px;}
+  .game-title{font-size:clamp(38px,13vw,64px);}
+  .modal-box{padding:20px;}
+}
+#home-link{position:fixed;top:14px;left:14px;z-index:999;background:rgba(13,39,64,.85);color:var(--ink);padding:9px 16px;border-radius:24px;border:1px solid var(--glass-border);text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:12.5px;letter-spacing:.05em;display:flex;align-items:center;gap:6px;transition:all .2s;backdrop-filter:blur(6px);}
+#home-link:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+<a id="home-link" href="../index.html">⬅ Home</a>
+<div id="boot-loader"><div class="loader-ring"></div><div style="font-family:var(--font-display);letter-spacing:.1em;color:var(--ink-dim);font-size:13px;">LOADING OCEAN DATA…</div></div>
+
+<div id="app">
+
+  <!-- ============ LANDING ============ -->
+  <div class="screen active" id="screen-landing">
+    <canvas id="landing-canvas"></canvas>
+    <div class="landing-vignette"></div>
+    <div class="landing-topbar">
+      <div class="icon-btn" id="btn-sound-toggle" title="Sound">🔊</div>
+    </div>
+    <div class="landing-content">
+      <div class="eyebrow">OCEAN INTELLIGENCE SIMULATION</div>
+      <div class="game-title">SMART FISHERMAN</div>
+      <div class="game-subtitle">Read the Ocean. Make the Right Decision. Bring Home the Catch.</div>
+      <div class="landing-buttons">
+        <button class="btn btn-primary" id="btn-play">▶ Play</button>
+        <button class="btn" id="btn-howto">How to Play</button>
+        <button class="btn" id="btn-knowledge">Ocean Knowledge</button>
+        <button class="btn" id="btn-garage">Boat Garage</button>
+        <button class="btn" id="btn-leaderboard">Leaderboard</button>
+        <button class="btn btn-ghost" id="btn-settings">Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE SETUP ============ -->
+  <div class="screen" id="screen-profile">
+    <div class="panel profile-card">
+      <div class="eyebrow">CREATE YOUR PROFILE</div>
+      <div style="font-family:var(--font-display);font-size:26px;font-weight:700;margin-top:8px;">Welcome Aboard</div>
+      <input type="text" id="input-name" placeholder="Enter your fisherman name" maxlength="18">
+      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Choose your emblem</div>
+      <div class="avatar-row" id="avatar-row"></div>
+      <button class="btn btn-primary" id="btn-profile-continue" style="width:100%;margin-top:26px;">Begin Career</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div class="screen" id="screen-game">
+    <div id="game-canvas-wrap">
+      <canvas id="ocean-canvas"></canvas>
+    </div>
+
+    <div class="hud-top">
+      <div class="hud-stats">
+        <div class="panel stat-chip"><span class="stat-icon">⛽</span><div><div class="val" id="hud-fuel">100%</div><div class="bar-track"><div class="bar-fill" id="fuel-fill" style="width:100%"></div></div></div></div>
+        <div class="panel stat-chip"><span class="stat-icon">❤️</span><div><div class="val" id="hud-health">100%</div><div class="bar-track"><div class="bar-fill" id="health-fill" style="width:100%"></div></div></div></div>
+        <div class="panel stat-chip"><span class="stat-icon">💰</span><div><div class="val" id="hud-earnings">₹0</div><div class="lbl">Earnings</div></div></div>
+        <div class="panel stat-chip"><span class="stat-icon">🐟</span><div><div class="val" id="hud-cargo">0</div><div class="lbl">Cargo</div></div></div>
+      </div>
+      <div class="hud-topright">
+        <div class="icon-btn" id="btn-pause" title="Menu">☰</div>
+      </div>
+    </div>
+
+    <div class="hud-left" id="layer-buttons">
+      <div class="layer-btn active" data-layer="pfz" title="Fishing Zones">🎣</div>
+      <div class="layer-btn" data-layer="wave" title="Wave Height">🌊</div>
+      <div class="layer-btn" data-layer="wind" title="Wind">💨</div>
+      <div class="layer-btn" data-layer="temp" title="Sea Temperature">🌡️</div>
+      <div class="layer-btn" data-layer="hazard" title="Safety / Cyclone">🚨</div>
+    </div>
+
+    <div class="panel hud-info-panel" id="info-panel">
+      <div style="font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.06em;color:var(--turquoise);">OCEAN CONDITIONS</div>
+      <div class="info-row"><span class="k">🌊 Wave</span><span class="v" id="info-wave">-- m</span></div>
+      <div class="info-row"><span class="k">💨 Wind</span><span class="v" id="info-wind">-- km/h</span></div>
+      <div class="info-row"><span class="k">🌡️ SST</span><span class="v" id="info-temp">--°C</span></div>
+      <div class="info-row"><span class="k">🌤️ Weather</span><span class="v" id="info-weather">--</span></div>
+      <div class="info-divider"></div>
+      <div class="info-row"><span class="k">Zone</span><span class="v" id="info-zone">Open Water</span></div>
+      <div class="info-row"><span class="k">Fish Prob.</span><span class="v" id="info-fishprob">--%</span></div>
+      <div id="info-zone-badge"></div>
+      <div class="info-divider"></div>
+      <div class="info-row"><span class="k">🚨 Cyclone Risk</span><span class="v" id="info-cyclone">LOW</span></div>
+    </div>
+
+    <div class="panel mission-tracker" id="mission-tracker">
+      <div class="mt-title"><span id="mt-mission-name">Mission</span></div>
+      <div id="mt-objectives"></div>
+    </div>
+
+    <div class="toast-stack" id="toast-stack"></div>
+
+    <div class="hud-bottom">
+      <div class="panel dock-btn" id="btn-navigate"><span class="di">🧭</span><span class="dl">Navigate</span></div>
+      <div class="panel dock-btn" id="btn-sonar"><span class="di">📡</span><span class="dl">Sonar</span></div>
+      <div class="panel dock-btn" id="btn-cast"><span class="di">🎣</span><span class="dl">Cast Line</span></div>
+      <div class="panel dock-btn" id="btn-return"><span class="di">⚓</span><span class="dl">Return</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modal-howto"><div class="modal-box"><div class="close-x" data-close="modal-howto">✕</div>
+  <div class="modal-title">How to Play</div><div class="modal-sub">The ocean gives you information. Your job is to read it correctly.</div>
+  <div style="font-size:13.5px;line-height:1.8;color:var(--ink-dim);">
+  <b style="color:var(--ink)">1. Study the map.</b> Toggle layers to see wave height, wind, sea temperature and Potential Fishing Zones (PFZ).<br>
+  <b style="color:var(--ink)">2. Pick a zone.</b> Green PFZ rings mean high fish probability — but they may be far, or near a storm.<br>
+  <b style="color:var(--ink)">3. Navigate.</b> Tap Navigate, then tap the ocean to set a course. Fuel drops as you travel.<br>
+  <b style="color:var(--ink)">4. Use Sonar.</b> Inside a zone, activate sonar to confirm fish density before casting.<br>
+  <b style="color:var(--ink)">5. Cast & reel.</b> Keep the marker inside the green window to land the fish.<br>
+  <b style="color:var(--ink)">6. Watch the weather.</b> Alerts will ask you to decide — push on, or return to port.<br>
+  <b style="color:var(--ink)">7. Return before fuel runs out.</b> Your trip is scored on catch, navigation, ocean awareness, fuel efficiency and safety.
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-knowledge"><div class="modal-box wide"><div class="close-x" data-close="modal-knowledge">✕</div>
+  <div class="modal-title">Ocean Knowledge</div><div class="modal-sub">Tap a card to flip it.</div>
+  <div class="know-grid" id="know-grid"></div>
+</div></div>
+
+<div class="modal-overlay" id="modal-leaderboard"><div class="modal-box"><div class="close-x" data-close="modal-leaderboard">✕</div>
+  <div class="modal-title">Leaderboard</div>
+  <div class="lb-tabs">
+    <div class="lb-tab active" data-period="daily">Daily</div>
+    <div class="lb-tab" data-period="weekly">Weekly</div>
+    <div class="lb-tab" data-period="monthly">Monthly</div>
+    <div class="lb-tab" data-period="alltime">All-Time</div>
+  </div>
+  <div id="lb-list"></div>
+</div></div>
+
+<div class="modal-overlay" id="modal-settings"><div class="modal-box"><div class="close-x" data-close="modal-settings">✕</div>
+  <div class="modal-title">Settings</div>
+  <div class="settings-row"><span>🔊 Sound Effects</span><div class="toggle on" id="toggle-sfx"><div class="knob"></div></div></div>
+  <div class="settings-row"><span>🎵 Ambient Music</span><div class="toggle on" id="toggle-music"><div class="knob"></div></div></div>
+  <div class="settings-row" style="border-bottom:none;"><span>🗑️ Reset Progress</span><button class="btn btn-danger btn-sm" id="btn-reset">Reset</button></div>
+</div></div>
+
+<div class="modal-overlay" id="modal-mission-select"><div class="modal-box"><div class="close-x" data-close="modal-mission-select">✕</div>
+  <div class="modal-title">Select Mission</div><div class="modal-sub">Difficulty increases as you progress through the fisherman career.</div>
+  <div class="mission-grid" id="mission-grid"></div>
+</div></div>
+
+<div class="modal-overlay" id="modal-mission-brief"><div class="modal-box"><div class="close-x" data-close="modal-mission-brief">✕</div>
+  <div class="eyebrow" id="brief-num">LEVEL 1</div>
+  <div class="modal-title" id="brief-title">First Catch</div>
+  <div class="modal-sub" id="brief-desc"></div>
+  <div id="brief-objectives" style="margin:14px 0;font-size:13px;line-height:1.9;color:var(--ink-dim);"></div>
+  <button class="btn btn-primary" id="btn-depart" style="width:100%;">⚓ Depart Port</button>
+</div></div>
+
+<div class="modal-overlay" id="modal-sonar"><div class="modal-box" style="text-align:center;"><div class="close-x" data-close="modal-sonar">✕</div>
+  <div class="modal-title">Fish Finder Sonar</div>
+  <div class="sonar-wrap">
+    <canvas id="sonar-canvas" width="320" height="320"></canvas>
+    <div class="sonar-readout">
+      <div class="sr-item"><div class="sr-val" id="sonar-depth">--m</div><div class="sr-lbl">Depth</div></div>
+      <div class="sr-item"><div class="sr-val" id="sonar-density">--</div><div class="sr-lbl">Fish Density</div></div>
+      <div class="sr-item"><div class="sr-val" id="sonar-school">--</div><div class="sr-lbl">School Size</div></div>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-fishing"><div class="modal-box" style="text-align:center;"><div class="close-x" data-close="modal-fishing">✕</div>
+  <div class="modal-title">Reel It In</div>
+  <div class="fish-wrap">
+    <div class="fish-info"><span class="fish-emoji" id="fish-emoji">🐟</span><div style="text-align:left;"><div style="font-weight:700;font-size:15px;" id="fish-name">Sardine</div><div style="font-size:11px;color:var(--ink-dim);" id="fish-diff">Easy · Low Value</div></div></div>
+    <div style="font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;">Hold to reel — keep the marker in the green zone</div>
+    <div class="tension-bar"><div class="tension-zone" id="tension-zone"></div><div class="tension-marker" id="tension-marker"></div></div>
+    <div style="font-size:11px;color:var(--ink-dim);">Catch Progress</div>
+    <div class="progress-bar"><div class="progress-fill" id="fish-progress"></div></div>
+    <div style="font-size:11px;color:var(--ink-dim);">Line Tension</div>
+    <div class="line-health-track"><div class="line-health-fill" id="line-health"></div></div>
+    <button class="reel-btn" id="btn-reel">HOLD<br>TO REEL</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-weather-alert"><div class="modal-box" style="text-align:center;"><div class="close-x" data-close="modal-weather-alert">✕</div>
+  <div class="alert-icon" id="alert-icon">⚠️</div>
+  <div class="modal-title" id="alert-title">Weather Alert</div>
+  <div class="modal-sub" id="alert-desc"></div>
+  <div style="display:flex;gap:10px;margin-top:10px;">
+    <button class="btn" id="btn-alert-return" style="flex:1;">⚓ Return to Port</button>
+    <button class="btn btn-primary" id="btn-alert-continue" style="flex:1;">Continue Fishing</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-trip-summary"><div class="modal-box"><div class="close-x" data-close="modal-trip-summary">✕</div>
+  <div class="eyebrow" id="summary-eyebrow">TRIP COMPLETE</div>
+  <div class="modal-title" id="summary-title">Trip Summary</div>
+  <div id="summary-rows"></div>
+  <div class="score-total"><span>Total Score</span><span id="summary-total">0</span></div>
+  <div class="tip-box" id="summary-tip"></div>
+  <button class="btn btn-primary" id="btn-summary-continue" style="width:100%;margin-top:18px;">Continue</button>
+</div></div>
+
+<div class="modal-overlay" id="modal-levelup"><div class="modal-box" style="text-align:center;"><div class="close-x" data-close="modal-levelup">✕</div>
+  <div class="levelup-badge" id="levelup-num">5</div>
+  <div class="modal-title">Level Up!</div>
+  <div class="modal-sub" id="levelup-rank">Skilled Fisherman</div>
+  <button class="btn btn-primary" id="btn-levelup-ok" style="width:100%;margin-top:10px;">Awesome</button>
+</div></div>
+
+<div class="modal-overlay" id="modal-garage"><div class="modal-box wide"><div class="close-x" data-close="modal-garage">✕</div>
+  <div class="modal-title">Boat Garage</div>
+  <div class="modal-sub" id="garage-boat-name">Current Boat</div>
+  <div class="garage-grid" id="garage-stats"></div>
+  <div id="garage-upgrades" style="margin-top:6px;"></div>
+</div></div>
+
+<script>
+/* =========================================================
+   SMART FISHERMAN — Ocean Intelligence Game
+   Vanilla JS + Canvas prototype
+   ========================================================= */
+
+/* ---------------- Utility ---------------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const choice=(arr)=>arr[Math.floor(Math.random()*arr.length)];
+function fmt(n){return Math.round(n).toLocaleString('en-IN');}
+function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function smoothNoise(x,y,seedFn){
+  // cheap value-noise via layered sines seeded per-run
+  return (Math.sin(x*1.7+seedFn(0)*10)+Math.cos(y*1.3+seedFn(1)*10)+Math.sin((x+y)*0.9+seedFn(2)*10))/3;
+}
+
+/* ---------------- Audio Engine ---------------- */
+const Audio1 = (()=>{
+  let ctx=null, sfxOn=true, musicOn=true, musicNodes=null;
+  function ensure(){ if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return ctx; }
+  function tone(freq,dur,type='sine',vol=0.18,delay=0){
+    if(!sfxOn) return; const c=ensure(); if(!c) return;
+    const t0=c.currentTime+delay;
+    const osc=c.createOscillator(); const gain=c.createGain();
+    osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0,t0);
+    gain.gain.linearRampToValueAtTime(vol,t0+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0+dur+0.05);
+  }
+  return {
+    ping(){tone(1400,0.35,'sine',0.12); tone(2100,0.3,'sine',0.06,0.05);},
+    click(){tone(700,0.06,'square',0.05);},
+    reel(){tone(rand(300,500),0.08,'triangle',0.08);},
+    success(){tone(660,0.15,'sine',0.15);tone(880,0.18,'sine',0.14,0.12);tone(1100,0.25,'sine',0.13,0.24);},
+    fail(){tone(220,0.3,'sawtooth',0.12);tone(160,0.35,'sawtooth',0.1,0.1);},
+    warn(){tone(500,0.2,'square',0.1);tone(400,0.2,'square',0.1,0.22);},
+    levelup(){[523,659,784,1046].forEach((f,i)=>tone(f,0.3,'sine',0.14,i*0.12));},
+    splash(){tone(rand(150,250),0.2,'sine',0.1);},
+    setSfx(v){sfxOn=v;},
+    setMusic(v){
+      musicOn=v; const c=ensure(); if(!c) return;
+      if(v && !musicNodes){
+        const osc=c.createOscillator(); const gain=c.createGain(); const filter=c.createBiquadFilter();
+        osc.type='sine'; osc.frequency.value=110; filter.type='lowpass'; filter.frequency.value=300;
+        gain.gain.value=0.02;
+        osc.connect(filter); filter.connect(gain); gain.connect(c.destination); osc.start();
+        musicNodes={osc,gain,filter};
+      } else if(!v && musicNodes){ musicNodes.osc.stop(); musicNodes=null; }
+    }
+  };
+})();
+
+/* ---------------- Persistent Storage ---------------- */
+const Store = {
+  mem:{},
+  async save(key,val){
+    try{ if(window.storage){ await window.storage.set(key, JSON.stringify(val), false); return; } }catch(e){}
+    this.mem[key]=val;
+  },
+  async load(key){
+    try{ if(window.storage){ const r=await window.storage.get(key,false); return r? JSON.parse(r.value): null; } }catch(e){}
+    return this.mem[key]!==undefined? this.mem[key]: null;
+  }
+};
+
+/* ---------------- Static Game Data ---------------- */
+const AVATARS=['🎣','⚓','🛶','🐟','🧭','🌊'];
+const RANKS=['Beginner','Coastal Fisherman','Skilled Fisherman','Expert Fisherman','Ocean Navigator','Master Fisherman'];
+function rankForLevel(lvl){ const idx=clamp(Math.floor((lvl-1)/3),0,RANKS.length-1); return RANKS[idx]; }
+function xpForLevel(lvl){ return 300 + (lvl-1)*180; }
+
+const BOATS=[
+  {id:'skiff',name:'Coastal Skiff',speed:1.0,fuelCap:100,cargo:40,safety:1.0,sonarRange:1.0,minLevel:1},
+  {id:'trawler',name:'Blue Trawler',speed:1.2,fuelCap:130,cargo:70,safety:1.2,sonarRange:1.25,minLevel:3},
+  {id:'cruiser',name:'Deep Cruiser',speed:1.4,fuelCap:160,cargo:110,safety:1.5,sonarRange:1.6,minLevel:6},
+];
+
+const UPGRADES=[
+  {id:'fuel_tank',name:'Fuel Tank',icon:'⛽',desc:'+15% fuel capacity',cost:400,stat:'fuelCap',amt:0.15},
+  {id:'sonar',name:'Advanced Sonar',icon:'📡',desc:'+20% sonar detection range',cost:500,stat:'sonarRange',amt:0.2},
+  {id:'nav',name:'Navigation System',icon:'🧭',desc:'+10% travel speed',cost:450,stat:'speed',amt:0.1},
+  {id:'safety',name:'Safety Equipment',icon:'🛟',desc:'+15% safety rating',cost:350,stat:'safety',amt:0.15},
+  {id:'gear',name:'Fishing Gear',icon:'🎣',desc:'+10% cargo capacity',cost:380,stat:'cargo',amt:0.1},
+];
+
+const FISH_TYPES=[
+  {id:'sardine',name:'Sardine',emoji:'🐟',difficulty:'Easy',value:60,zoneW:0.42,speed:0.9,minQuality:1},
+  {id:'mackerel',name:'Mackerel',emoji:'🐠',difficulty:'Medium',value:140,zoneW:0.30,speed:1.4,minQuality:2},
+  {id:'pomfret',name:'Pomfret',emoji:'🐡',difficulty:'Medium',value:190,zoneW:0.26,speed:1.6,minQuality:3},
+  {id:'tuna',name:'Tuna',emoji:'🐋',difficulty:'Hard',value:420,zoneW:0.16,speed:2.1,minQuality:4},
+];
+
+const MISSIONS=[
+  {id:1,name:'First Catch',desc:'Get familiar with your boat. Sail out, find any fishing zone and catch one fish.',
+    startFuel:100,targetCatch:1,minZoneQuality:1,forceWeatherEvent:false,fuelBudget:null,objectives:['Navigate to any Potential Fishing Zone','Catch 1 fish','Return safely to port']},
+  {id:2,name:'Find the PFZ',desc:'Not all zones are equal. Use the ocean layers to locate the highest-quality PFZ and fish there.',
+    startFuel:100,targetCatch:1,minZoneQuality:4,forceWeatherEvent:false,fuelBudget:null,objectives:['Identify a zone with PFZ Quality 4★ or higher','Catch 1 fish there','Return safely to port']},
+  {id:3,name:'Fuel Challenge',desc:'Fuel is limited. Plan your route carefully and still bring home a catch.',
+    startFuel:55,targetCatch:2,minZoneQuality:1,forceWeatherEvent:false,fuelBudget:null,objectives:['Catch 2 fish','Return to port with fuel remaining']},
+  {id:4,name:'Read the Sea',desc:'Wind and wave data hint at where fish gather. Use the Wave and Wind layers before deciding.',
+    startFuel:100,targetCatch:2,minZoneQuality:3,forceWeatherEvent:false,fuelBudget:null,objectives:['Check Wave & Wind layers before departing a zone','Catch 2 fish in a zone with Quality 3★+','Return safely']},
+  {id:5,name:'Storm Warning',desc:'Weather can change fast. React correctly when a warning appears.',
+    startFuel:100,targetCatch:2,minZoneQuality:1,forceWeatherEvent:true,fuelBudget:null,objectives:['Catch 2 fish','Respond safely to the weather alert','Return to port']},
+  {id:6,name:'Expert Fisherman',desc:'Balance profit, safety, distance and conditions like a professional.',
+    startFuel:90,targetCatch:3,minZoneQuality:3,forceWeatherEvent:true,fuelBudget:null,objectives:['Catch 3 fish, at least one from a 3★+ zone','Maintain Safety Rating above 60%','Return to port']},
+  {id:7,name:'Extreme Decision',desc:'Multiple ocean variables shift at once. Only the smartest decisions bring you home with profit.',
+    startFuel:80,targetCatch:3,minZoneQuality:4,forceWeatherEvent:true,fuelBudget:null,objectives:['Catch 3 fish from 4★+ zones','Survive at least one storm event','Return to port with fuel to spare'] },
+];
+
+const KNOWLEDGE_CARDS=[
+  {icon:'🎣',title:'What is PFZ?',text:'Potential Fishing Zones are ocean areas where conditions — temperature fronts, currents and chlorophyll — indicate a higher likelihood of fish availability.'},
+  {icon:'🌊',title:'Wave Height',text:'Taller waves mean rougher seas and higher risk for small boats. Calm waves (under 1.5m) are generally safer for fishing trips.'},
+  {icon:'💨',title:'Wind',text:'Strong onshore or offshore winds affect boat handling and can signal an approaching weather system.'},
+  {icon:'🌡️',title:'Sea Surface Temp.',text:'Fish often gather near temperature fronts, where warm and cool water masses meet, concentrating nutrients and prey.'},
+  {icon:'🌀',title:'Ocean Currents',text:'Currents move nutrients and small fish, shaping where larger predator fish are likely to feed.'},
+  {icon:'🌪️',title:'Cyclones', text:'Cyclones form over warm ocean water. Early warnings let fishermen return to port before conditions turn dangerous.'},
+  {icon:'🚨',title:'Tsunami Warnings',text:'Sudden sea-level changes or strong coastal earthquakes can trigger tsunami alerts — always prioritise returning to shore.'},
+  {icon:'🧭',title:'Safe Navigation',text:'Combining position, fuel, weather and distance-to-port data prevents fishermen from being stranded at sea.'},
+];
+
+/* ---------------- Player Profile ---------------- */
+let Profile={
+  name:'Fisherman', avatar:'🎣', level:1, xp:0, totalXpForLevel:xpForLevel(1),
+  totalCatches:0, totalEarnings:0, successfulTrips:0, safetyRating:100,
+  boatId:'skiff', ownedUpgrades:[], missionsCompleted:[], currentMission:1,
+};
+
+async function loadProfile(){
+  const saved=await Store.load('profile');
+  if(saved){ Profile=Object.assign(Profile,saved); }
+}
+async function saveProfile(){ await Store.save('profile',Profile); }
+
+function currentBoat(){
+  const base=BOATS.find(b=>b.id===Profile.boatId)||BOATS[0];
+  const boat={...base};
+  Profile.ownedUpgrades.forEach(uid=>{
+    const u=UPGRADES.find(x=>x.id===uid); if(!u) return;
+    boat[u.stat]=boat[u.stat]*(1+u.amt);
+  });
+  return boat;
+}
+
+/* ---------------- Ocean World Generation ---------------- */
+// world coords are fractions 0..1 of canvas; PORT fixed near bottom-left
+const PORT={x:0.12,y:0.85};
+let WORLD_SEED=Date.now()%100000;
+let zones=[];
+let weather={ condition:'Clear', waveHeight:1.0, windSpeed:12, windDir:'NE', seaTemp:28.0, cycloneRisk:'LOW', time:0 };
+let cyclone=null; // {x,y,r, active}
+
+function generateZones(seed){
+  const rng=mulberry32(seed);
+  const list=[];
+  const n=6;
+  for(let i=0;i<n;i++){
+    const x=0.28+rng()*0.62;
+    const y=0.12+rng()*0.68;
+    const qualityRoll=rng();
+    let quality;
+    if(qualityRoll>0.85) quality=5; else if(qualityRoll>0.62) quality=4; else if(qualityRoll>0.38) quality=3; else if(qualityRoll>0.15) quality=2; else quality=1;
+    const fishProbability=clamp(Math.round(quality*17+rng()*10),12,97);
+    list.push({
+      id:'zone_'+i, x, y, radius:0.055+quality*0.006+rng()*0.01,
+      quality, fishProbability,
+      density: quality>=4?'HIGH':quality>=2?'MEDIUM':'LOW',
+      depth: Math.round(20+rng()*70),
+      dominantFish: quality>=4? 'tuna': quality>=3? 'pomfret': quality>=2? 'mackerel':'sardine',
+    });
+  }
+  return list;
+}
+
+function zoneColor(q){
+  if(q>=5) return {fill:'46,230,166', ring:'#2ee6a6'};
+  if(q>=4) return {fill:'120,222,120', ring:'#7be07a'};
+  if(q>=3) return {fill:'255,217,61', ring:'#ffd93d'};
+  if(q>=2) return {fill:'255,159,67', ring:'#ff9f43'};
+  return {fill:'255,77,94', ring:'#ff4d5e'};
+}
+function starString(q){ return '★'.repeat(q)+'☆'.repeat(5-q); }
+
+function updateWeather(dt){
+  weather.time+=dt;
+  // slow drift
+  weather.waveHeight=clamp(weather.waveHeight + Math.sin(weather.time*0.05)*0.002 + (Trip.active&&Trip.stormBoost?0.01:0), 0.4, 4.5);
+  weather.windSpeed=clamp(weather.windSpeed + Math.sin(weather.time*0.03+1)*0.03 + (Trip.active&&Trip.stormBoost?0.15:0), 4, 70);
+  weather.seaTemp=clamp(27+Math.sin(weather.time*0.01)*1.5,24,31);
+  if(weather.waveHeight>2.6||weather.windSpeed>38) weather.condition= (weather.waveHeight>3.4?'Storm/Cyclone Warning':'Strong Wind');
+  else if(weather.waveHeight>1.8) weather.condition='Rough Sea';
+  else if(weather.windSpeed>22) weather.condition='Windy';
+  else weather.condition = Math.sin(weather.time*0.008)>0.3? 'Cloudy':'Clear';
+  weather.cycloneRisk = weather.waveHeight>3.2? 'HIGH': weather.waveHeight>2.2? 'MEDIUM':'LOW';
+
+  if(cyclone && cyclone.active){
+    cyclone.x+=cyclone.vx*dt; cyclone.y+=cyclone.vy*dt;
+    if(cyclone.x<0.15||cyclone.x>0.95) cyclone.vx*=-1;
+    if(cyclone.y<0.1||cyclone.y>0.9) cyclone.vy*=-1;
+  }
+}
+
+/* ---------------- Trip / Boat State ---------------- */
+let Trip={
+  active:false, mission:null,
+  boatX:PORT.x, boatY:PORT.y, heading:0, targetX:null, targetY:null,
+  fuel:100, health:100, cargo:[], earnings:0,
+  scoreCatch:0, scoreNav:0, scoreAwareness:0, scoreFuelEff:0, scoreSafety:300,
+  safetyViolations:0, distanceTraveled:0, layersChecked:new Set(),
+  storyFlags:{enteredHighQuality:false, respondedToStorm:false, stormEventFired:false, lowFuelWarned:false},
+  stormBoost:false, activeAlert:false, wakeParticles:[],
+};
+
+function startTrip(mission){
+  Trip={
+    active:true, mission,
+    boatX:PORT.x, boatY:PORT.y, heading:-Math.PI/2, targetX:null, targetY:null,
+    fuel:mission.startFuel, health:100, cargo:[], earnings:0,
+    scoreCatch:0, scoreNav:0, scoreAwareness:0, scoreFuelEff:0, scoreSafety:300,
+    safetyViolations:0, distanceTraveled:0, layersChecked:new Set(['pfz']),
+    storyFlags:{enteredHighQuality:false, respondedToStorm:false, stormEventFired:false, lowFuelWarned:false},
+    stormBoost:false, activeAlert:false, wakeParticles:[], _leftPort:false,
+  };
+  zones=generateZones(WORLD_SEED = Date.now()%100000);
+  weather.waveHeight=rand(0.8,1.6); weather.windSpeed=rand(10,20);
+  cyclone = mission.forceWeatherEvent? {x:rand(0.5,0.9), y:rand(0.15,0.4), r:0.18, active:false, vx:-0.008, vy:0.004, fired:false} : null;
+}
+
+function distFrac(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+function findZoneAt(x,y){
+  for(const z of zones){ if(distFrac(x,y,z.x,z.y) <= z.radius) return z; }
+  return null;
+}
+
+/* ---------------- Boat Update ---------------- */
+function updateBoat(dt){
+  const boat=currentBoat();
+  const speed=0.09*boat.speed; // frac per second at full
+  if(Trip.targetX!=null){
+    const dx=Trip.targetX-Trip.boatX, dy=Trip.targetY-Trip.boatY;
+    const d=Math.hypot(dx,dy);
+    if(d<0.006){ Trip.boatX=Trip.targetX; Trip.boatY=Trip.targetY; Trip.targetX=null; }
+    else{
+      const desiredHeading=Math.atan2(dy,dx);
+      let diff=desiredHeading-Trip.heading;
+      while(diff>Math.PI) diff-=Math.PI*2; while(diff<-Math.PI) diff+=Math.PI*2;
+      Trip.heading+=diff*Math.min(1,dt*4);
+      const step=Math.min(d,speed*dt*(weather.waveHeight>2.2?0.6:1));
+      const mx=Math.cos(Trip.heading)*step, my=Math.sin(Trip.heading)*step;
+      Trip.boatX+=mx; Trip.boatY+=my;
+      Trip.distanceTraveled += step;
+      // fuel burn — larger fuel tanks burn a smaller % of capacity per km travelled
+      const fuelPct = step*(60/boat.fuelCap*100);
+      Trip.fuel = clamp(Trip.fuel - fuelPct, 0, 100*(boat.fuelCap/100));
+      // wake particle
+      if(Math.random()<0.6) Trip.wakeParticles.push({x:Trip.boatX,y:Trip.boatY,life:1});
+    }
+  }
+  Trip.wakeParticles.forEach(p=>p.life-=dt*0.7);
+  Trip.wakeParticles=Trip.wakeParticles.filter(p=>p.life>0);
+
+  // storm damage if inside cyclone
+  if(cyclone && cyclone.active){
+    const d=distFrac(Trip.boatX,Trip.boatY,cyclone.x,cyclone.y);
+    if(d<cyclone.r){
+      Trip.health=clamp(Trip.health-dt*6,0,100);
+      Trip.scoreSafety=clamp(Trip.scoreSafety-dt*20,0,300);
+    }
+  }
+}
+
+/* =========================================================
+   RENDERING — Ocean canvas
+   ========================================================= */
+const canvas=document.getElementById('ocean-canvas');
+const ctx=canvas.getContext('2d');
+let W=0,H=0;
+function resizeCanvas(){
+  W=canvas.clientWidth; H=canvas.clientHeight;
+  canvas.width=W*devicePixelRatio; canvas.height=H*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+window.addEventListener('resize',resizeCanvas);
+
+let activeLayer='pfz';
+let animT=0;
+
+function drawOcean(dt){
+  animT+=dt;
+  // sky/water gradient responds to weather.condition
+  let top='#0a3352', bottom='#04667a';
+  if(weather.condition==='Storm/Cyclone Warning'){ top='#151c26'; bottom='#233144'; }
+  else if(weather.condition==='Strong Wind'||weather.condition==='Rough Sea'){ top='#123049'; bottom='#0c4a5e'; }
+  else if(weather.condition==='Cloudy'||weather.condition==='Windy'){ top='#0e3a58'; bottom='#0a5a72'; }
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,top); g.addColorStop(1,bottom);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // wave line texture
+  ctx.save();
+  ctx.globalAlpha=0.16;
+  const waveAmp=6+weather.waveHeight*4;
+  for(let i=0;i<7;i++){
+    ctx.beginPath();
+    const yBase=H*(0.12+i*0.13);
+    for(let x=0;x<=W;x+=14){
+      const y=yBase+Math.sin(x*0.02+animT*(0.6+weather.waveHeight*0.15)+i)*waveAmp*Math.sin(i*1.3+animT*0.1);
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle='#bdeeff'; ctx.lineWidth=1.4; ctx.stroke();
+  }
+  ctx.restore();
+
+  // cyclone visualization
+  if(cyclone && (cyclone.active||activeLayer==='hazard')){
+    const cx=cyclone.x*W, cy=cyclone.y*H, r=cyclone.r*Math.min(W,H);
+    ctx.save();
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.strokeStyle=`rgba(255,90,90,${0.5-i*0.14})`;
+      ctx.lineWidth=3;
+      const rot=animT*(1.2+i*0.4);
+      ctx.arc(cx,cy,r*(0.4+i*0.28),rot,rot+Math.PI*1.4);
+      ctx.stroke();
+    }
+    ctx.fillStyle='rgba(255,90,90,0.06)';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.fill();
+    ctx.font='22px sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#fff'; ctx.fillText('🌀',cx,cy+8);
+    ctx.restore();
+  }
+
+  // layer overlays
+  drawLayer();
+
+  // port
+  drawPort();
+
+  // zones (PFZ always visible as subtle outline; full glow when pfz layer active)
+  zones.forEach(z=>drawZone(z));
+
+  // boat
+  drawBoat();
+
+  // weather particles (rain/wind streaks)
+  drawWeatherFX(dt);
+}
+
+function drawPort(){
+  const x=PORT.x*W, y=PORT.y*H;
+  ctx.save();
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill();
+  ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('⚓',x,y);
+  ctx.fillStyle='#eaf6ff'; ctx.font='600 11px Inter, sans-serif';
+  ctx.fillText('PORT',x,y+30);
+  ctx.restore();
+}
+
+function drawZone(z){
+  const x=z.x*W, y=z.y*H, r=z.radius*Math.min(W,H);
+  const col=zoneColor(z.quality);
+  ctx.save();
+  const pulse=0.75+0.25*Math.sin(animT*1.6+z.x*10);
+  if(activeLayer==='pfz'){
+    const grad=ctx.createRadialGradient(x,y,r*0.1,x,y,r);
+    grad.addColorStop(0,`rgba(${col.fill},${0.32*pulse})`);
+    grad.addColorStop(1,`rgba(${col.fill},0)`);
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+    ctx.strokeStyle=col.ring; ctx.lineWidth=2; ctx.globalAlpha=0.8;
+    ctx.beginPath(); ctx.arc(x,y,r*pulse,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.font='700 11px Rajdhani, sans-serif'; ctx.fillStyle='#fff'; ctx.textAlign='center';
+    ctx.fillText(starString(z.quality), x, y-r-8);
+  } else {
+    ctx.strokeStyle=`rgba(${col.fill},0.35)`; ctx.lineWidth=1.4;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+function drawLayer(){
+  if(activeLayer==='wave'){
+    ctx.save(); ctx.globalAlpha=0.5;
+    for(let i=0;i<10;i++){
+      for(let j=0;j<6;j++){
+        const x=W*(i+0.5)/10, y=H*(j+0.5)/6;
+        const v=(smoothNoise(x*0.01,y*0.01,()=>WORLD_SEED%97/97)+1)/2 * weather.waveHeight;
+        const c = v>1.6? '255,77,94': v>1.0? '255,159,67':'46,230,166';
+        ctx.fillStyle=`rgba(${c},0.10)`;
+        ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill();
+      }
+    }
+    ctx.restore();
+  } else if(activeLayer==='wind'){
+    ctx.save(); ctx.strokeStyle='rgba(200,235,255,0.35)'; ctx.lineWidth=1.4;
+    const dirRad = {'N':-Math.PI/2,'NE':-Math.PI/4,'E':0,'SE':Math.PI/4,'S':Math.PI/2,'SW':3*Math.PI/4,'W':Math.PI,'NW':-3*Math.PI/4}[weather.windDir]||0;
+    for(let i=0;i<9;i++)for(let j=0;j<6;j++){
+      const x=W*(i+0.5)/9, y=H*(j+0.5)/6;
+      const len=10+weather.windSpeed*0.4;
+      const dx=Math.cos(dirRad)*len, dy=Math.sin(dirRad)*len;
+      ctx.beginPath(); ctx.moveTo(x-dx/2,y-dy/2); ctx.lineTo(x+dx/2,y+dy/2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+dx/2,y+dy/2); ctx.lineTo(x+dx/2-dx*0.3+dy*0.2,y+dy/2-dy*0.3-dx*0.2); ctx.stroke();
+    }
+    ctx.restore();
+  } else if(activeLayer==='temp'){
+    ctx.save(); ctx.globalAlpha=0.35;
+    const grad=ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0,'rgba(255,159,67,0.25)');
+    grad.addColorStop(0.5,'rgba(255,217,61,0.15)');
+    grad.addColorStop(1,'rgba(31,209,255,0.2)');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  } else if(activeLayer==='hazard'){
+    ctx.save(); ctx.globalAlpha=0.25;
+    ctx.fillStyle= weather.cycloneRisk==='HIGH'?'rgba(255,77,94,0.25)':weather.cycloneRisk==='MEDIUM'?'rgba(255,159,67,0.18)':'rgba(46,230,166,0.08)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+}
+
+function drawBoat(){
+  const x=Trip.boatX*W, y=Trip.boatY*H;
+  // wake
+  Trip.wakeParticles.forEach(p=>{
+    ctx.save(); ctx.globalAlpha=p.life*0.4; ctx.fillStyle='#bdeeff';
+    ctx.beginPath(); ctx.arc(p.x*W,p.y*H,3+ (1-p.life)*4,0,7); ctx.fill(); ctx.restore();
+  });
+  ctx.save();
+  ctx.translate(x,y);
+  const bob=Math.sin(animT*3)*2;
+  ctx.translate(0,bob);
+  ctx.rotate(Trip.heading+Math.PI/2);
+  // hull
+  ctx.fillStyle='#0d2740'; ctx.strokeStyle='#1fd1ff'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(0,-18); ctx.lineTo(9,10); ctx.quadraticCurveTo(0,18,-9,10); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#e8f1f2'; ctx.beginPath(); ctx.arc(0,-2,4,0,7); ctx.fill();
+  ctx.restore();
+  // health-low glow ring
+  if(Trip.health<40){
+    ctx.save(); ctx.strokeStyle='rgba(255,77,94,0.6)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x,y,22+Math.sin(animT*8)*3,0,7); ctx.stroke(); ctx.restore();
+  }
+}
+
+let rainDrops=[];
+function drawWeatherFX(dt){
+  const isRain = weather.condition==='Storm/Cyclone Warning'||weather.condition==='Strong Wind'||weather.condition==='Rough Sea';
+  if(isRain){
+    while(rainDrops.length<90) rainDrops.push({x:Math.random()*W,y:Math.random()*H,l:rand(8,20),s:rand(6,12)});
+    ctx.save(); ctx.strokeStyle='rgba(200,230,255,0.35)'; ctx.lineWidth=1;
+    rainDrops.forEach(d=>{
+      d.y+=d.s; d.x-=d.s*0.3;
+      if(d.y>H){d.y=-10;d.x=Math.random()*W;}
+      ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-4,d.y+d.l); ctx.stroke();
+    });
+    ctx.restore();
+  } else { rainDrops.length=Math.max(0,rainDrops.length-4); }
+}
+
+/* =========================================================
+   UI CONTROLLER
+   ========================================================= */
+const $=(s)=>document.querySelector(s);
+const $$=(s)=>document.querySelectorAll(s);
+function showScreen(id){ $$('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); }
+function openModal(id){ $('#'+id).classList.add('active'); }
+function closeModal(id){ $('#'+id).classList.remove('active'); }
+$$('.close-x').forEach(x=>x.addEventListener('click',()=>closeModal(x.dataset.close)));
+$$('.modal-overlay').forEach(o=>o.addEventListener('click',(e)=>{ if(e.target===o) o.classList.remove('active'); }));
+
+function toast(msg,type='info',ms=3600){
+  const el=document.createElement('div');
+  el.className='panel toast '+type;
+  el.textContent=msg;
+  $('#toast-stack').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, ms);
+}
+
+/* ---- Landing ---- */
+$('#btn-play').addEventListener('click', async ()=>{
+  Audio1.click();
+  await loadProfile();
+  if(!Profile.setupDone){ showScreen('screen-profile'); renderAvatars(); }
+  else { openMissionSelect(); }
+});
+$('#btn-howto').addEventListener('click',()=>{Audio1.click();openModal('modal-howto');});
+$('#btn-knowledge').addEventListener('click',()=>{Audio1.click();renderKnowledge();openModal('modal-knowledge');});
+$('#btn-leaderboard').addEventListener('click',()=>{Audio1.click();renderLeaderboard('daily');openModal('modal-leaderboard');});
+$('#btn-settings').addEventListener('click',()=>{Audio1.click();openModal('modal-settings');});
+$('#btn-garage').addEventListener('click', async ()=>{Audio1.click();await loadProfile();openGarage();openModal('modal-garage');});
+$('#btn-sound-toggle').addEventListener('click',(e)=>{
+  const on = e.target.textContent==='🔊';
+  e.target.textContent = on? '🔇':'🔊';
+  Audio1.setSfx(!on); Audio1.setMusic(!on);
+});
+
+/* ---- Profile setup ---- */
+function renderAvatars(){
+  const row=$('#avatar-row'); row.innerHTML='';
+  AVATARS.forEach(a=>{
+    const d=document.createElement('div');
+    d.className='avatar-opt'+(a===Profile.avatar?' selected':'');
+    d.textContent=a;
+    d.addEventListener('click',()=>{ $$('.avatar-opt').forEach(x=>x.classList.remove('selected')); d.classList.add('selected'); Profile.avatar=a; });
+    row.appendChild(d);
+  });
+}
+$('#btn-profile-continue').addEventListener('click', async ()=>{
+  const name=$('#input-name').value.trim();
+  Profile.name = name || 'Fisherman';
+  Profile.setupDone=true;
+  await saveProfile();
+  Audio1.success();
+  openMissionSelect();
+});
+
+/* ---- Mission Select ---- */
+function openMissionSelect(){
+  const grid=$('#mission-grid'); grid.innerHTML='';
+  MISSIONS.forEach(m=>{
+    const unlocked = m.id===1 || Profile.missionsCompleted.includes(m.id-1) || Profile.missionsCompleted.includes(m.id);
+    const item=document.createElement('div');
+    item.className='panel mission-item'+(unlocked?'':' locked');
+    const done=Profile.missionsCompleted.includes(m.id);
+    item.innerHTML=`<div class="mission-num">${done?'✅':String(m.id).padStart(2,'0')}</div>
+      <div><div class="mi-title">LEVEL ${m.id} — ${m.name}</div><div class="mi-desc">${m.desc}</div></div>`;
+    if(unlocked) item.addEventListener('click',()=>{ Audio1.click(); closeModal('modal-mission-select'); openBrief(m); });
+    grid.appendChild(item);
+  });
+  openModal('modal-mission-select');
+}
+
+function openBrief(mission){
+  $('#brief-num').textContent='LEVEL '+mission.id;
+  $('#brief-title').textContent=mission.name;
+  $('#brief-desc').textContent=mission.desc;
+  $('#brief-objectives').innerHTML=mission.objectives.map(o=>`<div>• ${o}</div>`).join('');
+  openModal('modal-mission-brief');
+  $('#btn-depart').onclick=()=>{
+    Audio1.click(); closeModal('modal-mission-brief');
+    beginMission(mission);
+  };
+}
+
+function beginMission(mission){
+  startTrip(mission);
+  showScreen('screen-game');
+  resizeCanvas();
+  updateMissionTracker();
+  toast('Departed port — Mission: '+mission.name,'info',3200);
+}
+
+/* ---- HUD updates ---- */
+function updateHud(){
+  const boat=currentBoat();
+  const fuelPct=clamp(Trip.fuel,0,100*(boat.fuelCap/100))/(boat.fuelCap/100);
+  $('#hud-fuel').textContent=Math.round(fuelPct)+'%';
+  const ff=$('#fuel-fill'); ff.style.width=fuelPct+'%'; ff.classList.toggle('low',fuelPct<25);
+  $('#hud-health').textContent=Math.round(Trip.health)+'%';
+  $('#health-fill').style.width=Trip.health+'%';
+  $('#hud-earnings').textContent='₹'+fmt(Trip.earnings);
+  $('#hud-cargo').textContent=Trip.cargo.length+'/'+Math.round(boat.cargo);
+
+  $('#info-wave').textContent=weather.waveHeight.toFixed(1)+' m';
+  $('#info-wind').textContent=Math.round(weather.windSpeed)+' km/h '+weather.windDir;
+  $('#info-temp').textContent=weather.seaTemp.toFixed(1)+'°C';
+  $('#info-weather').textContent=weather.condition;
+  $('#info-cyclone').textContent=weather.cycloneRisk;
+  const z=findZoneAt(Trip.boatX,Trip.boatY);
+  if(z){
+    $('#info-zone').textContent='Zone '+z.id.split('_')[1].toUpperCase();
+    $('#info-fishprob').textContent=z.fishProbability+'%';
+    const col=zoneColor(z.quality);
+    $('#info-zone-badge').innerHTML=`<span class="zone-badge" style="background:rgba(${col.fill},.18);color:${col.ring};border:1px solid ${col.ring}">${starString(z.quality)} PFZ</span>`;
+  } else {
+    $('#info-zone').textContent='Open Water';
+    $('#info-fishprob').textContent='--%';
+    $('#info-zone-badge').innerHTML='';
+  }
+  $('#btn-cast').classList.toggle('active', !!z);
+  $('#btn-sonar').style.opacity = 1;
+}
+
+function updateMissionTracker(){
+  const m=Trip.mission; if(!m) return;
+  $('#mt-mission-name').textContent='LEVEL '+m.id+' — '+m.name;
+  const caught=Trip.cargo.length;
+  const objs=[
+    {text:`Catch ${m.targetCatch} fish (${caught}/${m.targetCatch})`, done: caught>=m.targetCatch},
+    {text:`Fish from a ${m.minZoneQuality}★+ zone`, done: Trip.storyFlags.enteredHighQuality || m.minZoneQuality<=1},
+    {text:'Return safely to port', done:false},
+  ];
+  $('#mt-objectives').innerHTML=objs.map(o=>`<div class="mt-obj${o.done?' done':''}">${o.done?'✔':'○'} ${o.text}</div>`).join('');
+}
+
+/* ---- Layer buttons ---- */
+$$('.layer-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    Audio1.click();
+    $$('.layer-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeLayer=btn.dataset.layer;
+    Trip.layersChecked.add(activeLayer);
+    if(Trip.layersChecked.size>=3) Trip.scoreAwareness=200;
+  });
+});
+
+/* ---- Navigate (tap map to set course) ---- */
+let navigateMode=false;
+$('#btn-navigate').addEventListener('click',()=>{
+  Audio1.click();
+  navigateMode=!navigateMode;
+  $('#btn-navigate').classList.toggle('active',navigateMode);
+  toast(navigateMode? 'Tap the ocean to set your course':'Navigation mode off','info',2000);
+});
+canvas.addEventListener('click',(e)=>{
+  if(!Trip.active) return;
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width, y=(e.clientY-rect.top)/rect.height;
+  setCourse(x,y);
+});
+function setCourse(x,y){
+  Trip.targetX=clamp(x,0.02,0.98); Trip.targetY=clamp(y,0.05,0.96);
+  Audio1.click();
+}
+
+/* ---- Return to port ---- */
+$('#btn-return').addEventListener('click',()=>{
+  Audio1.click();
+  setCourse(PORT.x,PORT.y);
+  toast('Returning to port…','info',2200);
+});
+
+/* ---- Sonar ---- */
+const sonarCanvas=$('#sonar-canvas'); const sctx=sonarCanvas.getContext('2d');
+let sonarBlips=[]; let sonarAngle=0; let sonarRAF=null;
+$('#btn-sonar').addEventListener('click',()=>{
+  if(!Trip.active) return;
+  Audio1.click();
+  const z=findZoneAt(Trip.boatX,Trip.boatY);
+  const density = z? z.density:'LOW';
+  const depth = z? z.depth: Math.round(rand(15,90));
+  $('#sonar-depth').textContent=depth+'m';
+  $('#sonar-density').textContent=density;
+  const schoolSize = density==='HIGH'?'LARGE':density==='MEDIUM'?'MEDIUM':'SMALL';
+  $('#sonar-school').textContent=schoolSize;
+  const count = density==='HIGH'? 7: density==='MEDIUM'? 4:2;
+  sonarBlips=[];
+  for(let i=0;i<count;i++){
+    sonarBlips.push({a:Math.random()*Math.PI*2, r:rand(0.25,0.9), size:rand(3,7)+(density==='HIGH'?3:0)});
+  }
+  openModal('modal-sonar');
+  Audio1.ping();
+  startSonarLoop();
+});
+document.getElementById('modal-sonar').addEventListener('click',(e)=>{ if(e.target.dataset.close||e.target===document.getElementById('modal-sonar')){ stopSonarLoop(); }});
+function startSonarLoop(){
+  stopSonarLoop();
+  let last=performance.now();
+  function loop(t){
+    const dt=(t-last)/1000; last=t;
+    sonarAngle+=dt*1.4;
+    drawSonar();
+    sonarRAF=requestAnimationFrame(loop);
+  }
+  sonarRAF=requestAnimationFrame(loop);
+}
+function stopSonarLoop(){ if(sonarRAF) cancelAnimationFrame(sonarRAF); sonarRAF=null; }
+function drawSonar(){
+  const cx=160,cy=160,R=150;
+  sctx.clearRect(0,0,320,320);
+  sctx.save();
+  sctx.strokeStyle='rgba(31,209,255,0.25)'; sctx.lineWidth=1;
+  for(let r=R/4;r<=R;r+=R/4){ sctx.beginPath(); sctx.arc(cx,cy,r,0,7); sctx.stroke(); }
+  sctx.beginPath(); sctx.moveTo(cx-R,cy); sctx.lineTo(cx+R,cy); sctx.moveTo(cx,cy-R); sctx.lineTo(cx,cy+R); sctx.stroke();
+  // sweep
+  const grad=sctx.createConicGradient? sctx.createConicGradient(sonarAngle,cx,cy): null;
+  sctx.save();
+  sctx.beginPath(); sctx.moveTo(cx,cy);
+  sctx.arc(cx,cy,R,sonarAngle-0.5,sonarAngle);
+  sctx.closePath();
+  sctx.fillStyle='rgba(31,209,255,0.25)'; sctx.fill();
+  sctx.restore();
+  // blips
+  sonarBlips.forEach(b=>{
+    const bx=cx+Math.cos(b.a)*b.r*R, by=cy+Math.sin(b.a)*b.r*R;
+    const diff=Math.abs(((sonarAngle - b.a + Math.PI*3)%(Math.PI*2))-Math.PI);
+    const lit = diff<0.6;
+    sctx.beginPath(); sctx.arc(bx,by,b.size,0,7);
+    sctx.fillStyle= lit? '#2ee6a6':'rgba(46,230,166,0.35)';
+    sctx.shadowColor='#2ee6a6'; sctx.shadowBlur= lit? 14:0;
+    sctx.fill();
+  });
+  sctx.restore();
+}
+
+/* ---- Fishing minigame ---- */
+let fishGame=null;
+$('#btn-cast').addEventListener('click',()=>{
+  if(!Trip.active) return;
+  const z=findZoneAt(Trip.boatX,Trip.boatY);
+  if(!z){ toast('You need to be inside a fishing zone to cast your line.','warn',2600); return; }
+  const boat=currentBoat();
+  if(Trip.cargo.length>=boat.cargo){ toast('Cargo hold is full!','warn',2400); return; }
+  Audio1.click();
+  const candidates=FISH_TYPES.filter(f=>z.quality>=f.minQuality);
+  const fish=choice(candidates.length?candidates:[FISH_TYPES[0]]);
+  startFishing(fish,z);
+});
+function startFishing(fish,zone){
+  $('#fish-emoji').textContent=fish.emoji;
+  $('#fish-name').textContent=fish.name;
+  $('#fish-diff').textContent=fish.difficulty+' · Value ₹'+fish.value;
+  const zoneWpx = fish.zoneW*100;
+  const zoneLeft = 50-zoneWpx/2;
+  $('#tension-zone').style.left=zoneLeft+'%'; $('#tension-zone').style.width=zoneWpx+'%';
+  $('#fish-progress').style.width='0%'; $('#line-health').style.width='100%';
+  fishGame={fish,zone,pos:0,dir:1,progress:0,lineHealth:100,holding:false,zoneLeft,zoneWpx,active:true};
+  openModal('modal-fishing');
+  fishLoop();
+}
+const reelBtn=$('#btn-reel');
+['mousedown','touchstart'].forEach(ev=>reelBtn.addEventListener(ev,(e)=>{e.preventDefault();if(fishGame)fishGame.holding=true;}));
+['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>reelBtn.addEventListener(ev,()=>{if(fishGame)fishGame.holding=false;}));
+let fishRAF=null;
+function fishLoop(){
+  let last=performance.now();
+  function loop(t){
+    if(!fishGame||!fishGame.active) return;
+    const dt=Math.min((t-last)/1000,0.05); last=t;
+    const g=fishGame; const speed=fish_speed(g.fish);
+    g.pos += g.dir*speed*dt;
+    if(g.pos>1){g.pos=1;g.dir=-1;} if(g.pos<0){g.pos=0;g.dir=1;}
+    const posPct=g.pos*100;
+    $('#tension-marker').style.left=`calc(${posPct}% - 3px)`;
+    const inZone = posPct>=g.zoneLeft && posPct<=g.zoneLeft+g.zoneWpx;
+    if(g.holding){
+      if(inZone){ g.progress=clamp(g.progress+dt*32,0,100); if(Math.random()<0.15) Audio1.reel(); }
+      else { g.lineHealth=clamp(g.lineHealth-dt*40,0,100); }
+    } else {
+      g.progress=clamp(g.progress-dt*6,0,100);
+    }
+    $('#fish-progress').style.width=g.progress+'%';
+    $('#line-health').style.width=g.lineHealth+'%';
+    if(g.progress>=100){ finishFishing(true); return; }
+    if(g.lineHealth<=0){ finishFishing(false); return; }
+    fishRAF=requestAnimationFrame(loop);
+  }
+  fishRAF=requestAnimationFrame(loop);
+}
+function fish_speed(fish){ return fish.speed*0.55; }
+function finishFishing(success){
+  fishGame.active=false;
+  if(fishRAF) cancelAnimationFrame(fishRAF);
+  setTimeout(()=>{
+    closeModal('modal-fishing');
+    if(success){
+      Audio1.success();
+      const fish=fishGame.fish, zone=fishGame.zone;
+      Trip.cargo.push({fish:fish.id,value:fish.value,zoneQuality:zone.quality});
+      Trip.earnings+=fish.value;
+      Trip.scoreCatch += Math.round(fish.value*0.9);
+      if(zone.quality>=4){ Trip.storyFlags.enteredHighQuality=true; }
+      toast(`Caught a ${fish.name}! +₹${fish.value}`,'good',2800);
+    } else {
+      Audio1.fail();
+      toast('The line snapped — fish got away.','danger',2600);
+    }
+    updateMissionTracker();
+    fishGame=null;
+  },350);
+}
+
+/* ---- Weather Alerts ---- */
+let alertCooldown=0;
+function maybeTriggerWeatherAlert(dt){
+  if(!Trip.active||Trip.activeAlert) return;
+  alertCooldown-=dt;
+  if(cyclone && !cyclone.active && !cyclone.fired){
+    const d=distFrac(Trip.boatX,Trip.boatY,cyclone.x,cyclone.y);
+    if(d<cyclone.r*2.4 && Trip.mission.forceWeatherEvent){
+      cyclone.fired=true; cyclone.active=true; Trip.stormBoost=true;
+      fireWeatherAlert('storm');
+    }
+  }
+  if(!cyclone && weather.condition==='Rough Sea' && alertCooldown<=0 && Math.random()<0.002){
+    alertCooldown=40; fireWeatherAlert('rough');
+  }
+}
+function fireWeatherAlert(kind){
+  Trip.activeAlert=true;
+  if(kind==='storm'){
+    $('#alert-icon').textContent='🌪️';
+    $('#alert-title').textContent='Cyclone Warning';
+    $('#alert-desc').textContent='A cyclone system has intensified nearby. Wave height and wind speed are rising fast. Continuing to fish here is risky.';
+  } else {
+    $('#alert-icon').textContent='⚠️';
+    $('#alert-title').textContent='Rough Sea Alert';
+    $('#alert-desc').textContent='Wave height is increasing beyond safe limits for a small boat. Consider heading back.';
+  }
+  Audio1.warn();
+  openModal('modal-weather-alert');
+}
+$('#btn-alert-return').addEventListener('click',()=>{
+  Trip.activeAlert=false; closeModal('modal-weather-alert');
+  Trip.storyFlags.respondedToStorm=true;
+  setCourse(PORT.x,PORT.y);
+  toast('Smart move — heading back to port.','good',2600);
+});
+$('#btn-alert-continue').addEventListener('click',()=>{
+  Trip.activeAlert=false; closeModal('modal-weather-alert');
+  Trip.safetyViolations++; Trip.scoreSafety=clamp(Trip.scoreSafety-120,0,300);
+  toast('Continuing in dangerous conditions — safety score reduced.','danger',3000);
+});
+
+/* ---- Pause / menu ---- */
+$('#btn-pause').addEventListener('click',()=>{
+  if(confirm('Abandon this trip and return to menu?')){
+    endTrip(false);
+    showScreen('screen-landing');
+  }
+});
+
+/* ---- Garage ---- */
+function openGarage(){
+  const boat=currentBoat();
+  const baseBoat=BOATS.find(b=>b.id===Profile.boatId);
+  $('#garage-boat-name').textContent=baseBoat.name+' — Lvl '+Profile.level+' '+rankForLevel(Profile.level);
+  const stats=[
+    ['SPEED',boat.speed,2.0],['FUEL CAPACITY',boat.fuelCap,220],['CARGO',boat.cargo,150],
+    ['SAFETY',boat.safety,2.2],['SONAR RANGE',boat.sonarRange,2.2],
+  ];
+  $('#garage-stats').innerHTML=stats.map(s=>`
+    <div class="panel stat-block"><div class="sb-lbl">${s[0]}</div><div class="sb-bar"><div class="sb-fill" style="width:${clamp(s[1]/s[2]*100,4,100)}%"></div></div></div>
+  `).join('');
+  const upEl=$('#garage-upgrades'); upEl.innerHTML='';
+  UPGRADES.forEach(u=>{
+    const owned=Profile.ownedUpgrades.includes(u.id);
+    const row=document.createElement('div');
+    row.className='panel upgrade-item';
+    row.innerHTML=`<div class="ui-left"><span style="font-size:20px;">${u.icon}</span><div><div class="ui-name">${u.name}</div><div class="ui-desc">${u.desc}</div></div></div>
+      ${owned? '<span style="color:var(--pfz-green);font-weight:700;font-size:12px;">OWNED</span>' : `<button class="btn btn-sm" data-upg="${u.id}">₹${u.cost}</button>`}`;
+    upEl.appendChild(row);
+  });
+  upEl.querySelectorAll('[data-upg]').forEach(b=>b.addEventListener('click',()=>{
+    const u=UPGRADES.find(x=>x.id===b.dataset.upg);
+    if(Profile.totalEarnings<u.cost){ toast('Not enough earnings for this upgrade.','warn',2400); return; }
+    Profile.totalEarnings-=u.cost; Profile.ownedUpgrades.push(u.id);
+    Audio1.success(); saveProfile(); openGarage();
+  }));
+  // boat tier unlock buttons
+  const tierHtml=BOATS.filter(b=>b.id!==Profile.boatId).map(b=>{
+    const locked=Profile.level<b.minLevel;
+    return `<div class="panel upgrade-item"><div class="ui-left"><span style="font-size:20px;">🚤</span><div><div class="ui-name">${b.name}</div><div class="ui-desc">${locked? 'Unlocks at Level '+b.minLevel : 'Switch to this boat'}</div></div></div>
+      <button class="btn btn-sm" data-boat="${b.id}" ${locked?'disabled':''}>${locked?'Locked':'Select'}</button></div>`;
+  }).join('');
+  upEl.insertAdjacentHTML('afterbegin', tierHtml);
+  upEl.querySelectorAll('[data-boat]').forEach(b=>b.addEventListener('click',()=>{
+    Profile.boatId=b.dataset.boat; Audio1.success(); saveProfile(); openGarage();
+    toast('Boat changed!','good',2200);
+  }));
+}
+
+/* ---- Trip ending & scoring ---- */
+function checkPortReturn(){
+  if(!Trip.active) return;
+  const d=distFrac(Trip.boatX,Trip.boatY,PORT.x,PORT.y);
+  if(d<0.03 && Trip.targetX===null && (Trip.cargo.length>0 || Trip.distanceTraveled>0.05)){
+    // only auto-complete if user actually intended to return: check if last command was return, simplify: complete whenever near port after having left
+    if(Trip._leftPort){ endTrip(true); }
+  } else if(d>0.05){ Trip._leftPort=true; }
+}
+
+function endTrip(reachedPort){
+  if(!Trip.active) return;
+  Trip.active=false;
+  const boat=currentBoat();
+  const fuelPctRemaining=clamp(Trip.fuel,0,100*(boat.fuelCap/100))/(boat.fuelCap/100);
+  const mission=Trip.mission;
+
+  const catchScore=Trip.scoreCatch;
+  const navScore = Math.round(clamp(150 - Trip.distanceTraveled*80,20,150) + (Trip.storyFlags.enteredHighQuality?0:0));
+  const awarenessScore = Trip.scoreAwareness || (Trip.layersChecked.size*40);
+  const fuelEffScore = Math.round(clamp(fuelPctRemaining,0,100));
+  const safetyScore = Math.round(Trip.scoreSafety);
+  const total = catchScore+navScore+awarenessScore+fuelEffScore+safetyScore;
+
+  const missionSuccess = reachedPort && Trip.cargo.length>=mission.targetCatch && fuelPctRemaining>0;
+
+  Profile.totalCatches += Trip.cargo.length;
+  Profile.totalEarnings += Trip.earnings;
+  if(missionSuccess){ Profile.successfulTrips++; if(!Profile.missionsCompleted.includes(mission.id)) Profile.missionsCompleted.push(mission.id); }
+  Profile.safetyRating = clamp(Math.round((Profile.safetyRating + (safetyScore/300*100))/2),0,100);
+
+  const xpGain = Math.round(total*0.4) + (missionSuccess?150:20);
+  Profile.xp += xpGain;
+  let leveledUp=false;
+  while(Profile.xp >= xpForLevel(Profile.level)){
+    Profile.xp -= xpForLevel(Profile.level);
+    Profile.level++; leveledUp=true;
+  }
+  saveProfile();
+  saveLeaderboardEntry(total);
+
+  showTripSummary({catchScore,navScore,awarenessScore,fuelEffScore,safetyScore,total,xpGain,missionSuccess,reachedPort,fuelPctRemaining});
+  if(leveledUp) setTimeout(()=>showLevelUp(),600);
+}
+
+function showTripSummary(s){
+  $('#summary-eyebrow').textContent = s.missionSuccess? 'MISSION COMPLETE':'TRIP COMPLETE';
+  $('#summary-title').textContent = s.missionSuccess? 'Well Sailed!':'Trip Summary';
+  const rows=[
+    ['🎣 Catch',s.catchScore],['🧭 Navigation',s.navScore],['🌊 Ocean Awareness',s.awarenessScore],
+    ['⛽ Fuel Efficiency',s.fuelEffScore],['🛟 Safety',s.safetyScore],
+  ];
+  $('#summary-rows').innerHTML=rows.map(r=>`<div class="score-row"><span class="sr-label">${r[0]}</span><span class="sr-num">+${r[1]}</span></div>`).join('')
+    + `<div class="score-row"><span class="sr-label">💰 Profit</span><span class="sr-num">₹${fmt(Trip.earnings)}</span></div>
+       <div class="score-row"><span class="sr-label">✨ XP Gained</span><span class="sr-num">+${s.xpGain}</span></div>`;
+  animateCount($('#summary-total'),0,s.total,900);
+  let tip='';
+  if(!s.reachedPort) tip='⚠️ SMART DECISION TIP — Your trip ended before returning to port. Always plan enough fuel and time to return safely, even if it means leaving a good zone early.';
+  else if(s.fuelEffScore<25) tip='⚠️ SMART DECISION TIP — You returned with very little fuel. Choosing a closer PFZ with slightly lower quality is often the safer, more profitable choice.';
+  else if(s.safetyScore<150) tip='⚠️ SMART DECISION TIP — You took on real risk from rough conditions. Watching the Wave and Hazard layers earlier would have reduced the danger.';
+  else if(s.missionSuccess) tip='✅ Great decisions — you balanced fishing zone quality, fuel and safety like a true smart fisherman.';
+  else tip='Keep exploring the ocean layers before choosing a zone — the highest-probability PFZ isn\'t always the closest one.';
+  const tipBox=$('#summary-tip'); tipBox.textContent=tip; tipBox.className='tip-box'+(tip.startsWith('✅')?' good':'');
+  openModal('modal-trip-summary');
+}
+function animateCount(el,from,to,ms){
+  const t0=performance.now();
+  function step(t){
+    const p=clamp((t-t0)/ms,0,1);
+    el.textContent=fmt(lerp(from,to,1-Math.pow(1-p,3)));
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+$('#btn-summary-continue').addEventListener('click',()=>{
+  closeModal('modal-trip-summary');
+  showScreen('screen-landing');
+});
+
+function showLevelUp(){
+  $('#levelup-num').textContent=Profile.level;
+  $('#levelup-rank').textContent=rankForLevel(Profile.level);
+  Audio1.levelup();
+  openModal('modal-levelup');
+}
+$('#btn-levelup-ok').addEventListener('click',()=>closeModal('modal-levelup'));
+
+/* ---- Leaderboard (simulated + local) ---- */
+const SIM_LEADERBOARD=[
+  {name:'OceanMaster',score:9820},{name:'SeaHunter',score:9450},{name:'BlueWave',score:9110},
+  {name:'TidalKing',score:8790},{name:'ReefRunner',score:8320},{name:'DeepDiver',score:7990},
+  {name:'CoralQueen',score:7640},{name:'WaveChaser',score:7210},
+];
+let myScores=[];
+async function saveLeaderboardEntry(score){
+  myScores.push({name:Profile.name,score,me:true});
+  await Store.save('myScores',myScores);
+}
+function renderLeaderboard(period){
+  $$('.lb-tab').forEach(t=>t.classList.toggle('active',t.dataset.period===period));
+  let entries=[...SIM_LEADERBOARD, ...myScores].sort((a,b)=>b.score-a.score).slice(0,10);
+  if(entries.length===0) entries=SIM_LEADERBOARD;
+  const medals=['🥇','🥈','🥉'];
+  $('#lb-list').innerHTML=entries.map((e,i)=>`
+    <div class="panel lb-row${e.me?' me':''}"><span class="lb-rank">${medals[i]||(i+1)}</span><span class="lb-name">${e.name}${e.me?' (You)':''}</span><span class="lb-score">${fmt(e.score)}</span></div>
+  `).join('');
+}
+$$('.lb-tab').forEach(t=>t.addEventListener('click',()=>{Audio1.click();renderLeaderboard(t.dataset.period);}));
+
+/* ---- Knowledge cards ---- */
+function renderKnowledge(){
+  const grid=$('#know-grid'); grid.innerHTML='';
+  KNOWLEDGE_CARDS.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='know-card';
+    el.innerHTML=`<div class="know-card-inner">
+      <div class="know-face front"><div class="know-emoji">${c.icon}</div><div style="font-weight:700;font-size:12.5px;">${c.title}</div></div>
+      <div class="know-face back">${c.text}</div>
+    </div>`;
+    el.addEventListener('click',()=>el.classList.toggle('flipped'));
+    grid.appendChild(el);
+  });
+}
+
+/* ---- Settings toggles ---- */
+$('#toggle-sfx').addEventListener('click',(e)=>{ e.target.classList.toggle('on'); Audio1.setSfx(e.target.classList.contains('on')); });
+$('#toggle-music').addEventListener('click',(e)=>{ e.target.classList.toggle('on'); Audio1.setMusic(e.target.classList.contains('on')); });
+$('#btn-reset').addEventListener('click', async ()=>{
+  if(confirm('Reset all progress? This cannot be undone.')){
+    Profile={name:'Fisherman',avatar:'🎣',level:1,xp:0,totalCatches:0,totalEarnings:0,successfulTrips:0,safetyRating:100,boatId:'skiff',ownedUpgrades:[],missionsCompleted:[],currentMission:1,setupDone:false};
+    await saveProfile();
+    toast('Progress reset.','info',2400);
+    closeModal('modal-settings');
+    showScreen('screen-landing');
+  }
+});
+
+/* =========================================================
+   MAIN LOOP
+   ========================================================= */
+let lastT=performance.now();
+function mainLoop(t){
+  const dt=Math.min((t-lastT)/1000,0.05); lastT=t;
+  if(Trip.active){
+    updateWeather(dt);
+    updateBoat(dt);
+    maybeTriggerWeatherAlert(dt);
+    checkPortReturn();
+    updateHud();
+    updateMissionTracker();
+    // low fuel toast
+    const boat=currentBoat();
+    const fuelPct=clamp(Trip.fuel,0,100)/(boat.fuelCap/100);
+    if(fuelPct<20 && !Trip.storyFlags.lowFuelWarned){ Trip.storyFlags.lowFuelWarned=true; toast('⛽ Fuel critically low — return to port soon!','danger',3600); Audio1.warn(); }
+    if(fuelPct<=0 && Trip.active){ toast('Out of fuel — emergency rescue triggered.','danger',3200); Trip.scoreSafety=clamp(Trip.scoreSafety-150,0,300); endTrip(false); }
+  }
+  if($('#screen-game').classList.contains('active')){
+    resizeIfNeeded();
+    drawOcean(dt);
+  }
+  requestAnimationFrame(mainLoop);
+}
+function resizeIfNeeded(){ if(canvas.clientWidth!==W||canvas.clientHeight!==H) resizeCanvas(); }
+
+/* ---------------- Landing background canvas ---------------- */
+const lc=document.getElementById('landing-canvas'); const lctx=lc.getContext('2d');
+let LW=0,LH=0,lt=0;
+function resizeLanding(){ LW=lc.clientWidth; LH=lc.clientHeight; lc.width=LW*devicePixelRatio; lc.height=LH*devicePixelRatio; lctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+window.addEventListener('resize',resizeLanding);
+function drawLanding(dt){
+  lt+=dt;
+  const g=lctx.createLinearGradient(0,0,0,LH);
+  g.addColorStop(0,'#ffb37a'); g.addColorStop(0.28,'#2c6e8f'); g.addColorStop(0.5,'#0c3d59'); g.addColorStop(1,'#031522');
+  lctx.fillStyle=g; lctx.fillRect(0,0,LW,LH);
+  // sun
+  lctx.save(); lctx.globalAlpha=0.85; const sg=lctx.createRadialGradient(LW*0.5,LH*0.32,0,LW*0.5,LH*0.32,140);
+  sg.addColorStop(0,'rgba(255,230,180,0.9)'); sg.addColorStop(1,'rgba(255,230,180,0)');
+  lctx.fillStyle=sg; lctx.beginPath(); lctx.arc(LW*0.5,LH*0.32,140,0,7); lctx.fill(); lctx.restore();
+  // clouds
+  for(let i=0;i<4;i++){
+    const cx=(LW*(0.15+i*0.25)+Math.sin(lt*0.03+i)*20)%(LW+200)-100, cy=LH*(0.15+i*0.05);
+    lctx.save(); lctx.globalAlpha=0.18; lctx.fillStyle='#fff';
+    for(let k=0;k<4;k++){ lctx.beginPath(); lctx.ellipse(cx+k*26,cy,30,16,0,0,7); lctx.fill(); }
+    lctx.restore();
+  }
+  // waves
+  for(let i=0;i<8;i++){
+    lctx.beginPath();
+    const yBase=LH*(0.42+i*0.075);
+    for(let x=0;x<=LW;x+=16){
+      const y=yBase+Math.sin(x*0.018+lt*0.7+i)*(4+i*1.2);
+      x===0?lctx.moveTo(x,y):lctx.lineTo(x,y);
+    }
+    lctx.lineTo(LW,LH); lctx.lineTo(0,LH); lctx.closePath();
+    lctx.fillStyle=`rgba(4,${20+i*4},${40+i*6},0.35)`;
+    lctx.fill();
+  }
+  // boat silhouette
+  const bx=LW*0.68, by=LH*0.5+Math.sin(lt*1.4)*4;
+  lctx.save(); lctx.translate(bx,by); lctx.fillStyle='rgba(6,16,26,0.85)';
+  lctx.beginPath(); lctx.moveTo(-34,0); lctx.lineTo(34,0); lctx.lineTo(24,14); lctx.lineTo(-24,14); lctx.closePath(); lctx.fill();
+  lctx.beginPath(); lctx.moveTo(0,0); lctx.lineTo(0,-30); lctx.lineTo(16,0); lctx.closePath(); lctx.fill();
+  lctx.restore();
+  // birds
+  for(let i=0;i<3;i++){
+    const bx2=(LW*0.1+ (lt*18+i*140)%(LW+120))-60, by2=LH*(0.18+i*0.05);
+    lctx.save(); lctx.strokeStyle='rgba(20,20,20,0.5)'; lctx.lineWidth=2;
+    const flap=Math.sin(lt*6+i)*6;
+    lctx.beginPath(); lctx.moveTo(bx2-8,by2+flap); lctx.quadraticCurveTo(bx2,by2-6,bx2+8,by2+flap); lctx.stroke();
+    lctx.restore();
+  }
+}
+let lastLandT=performance.now();
+function landingLoop(t){
+  const dt=Math.min((t-lastLandT)/1000,0.05); lastLandT=t;
+  if($('#screen-landing').classList.contains('active')){
+    if(LW!==lc.clientWidth||LH!==lc.clientHeight) resizeLanding();
+    drawLanding(dt);
+  }
+  requestAnimationFrame(landingLoop);
+}
+
+/* ---------------- Boot ---------------- */
+(async function boot(){
+  resizeLanding(); resizeCanvas();
+  await loadProfile();
+  const saved=await Store.load('myScores'); if(saved) myScores=saved;
+  requestAnimationFrame(landingLoop);
+  requestAnimationFrame(mainLoop);
+  setTimeout(()=>{ document.getElementById('boot-loader').style.display='none'; },500);
+})();
+
+</script>
+</body>
+</html>
