@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Learn — Ocean Command</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #BFE3F0 0%, #7FC3DE 20%, #3E8FB8 55%, #1E5F8C 100%);
+    min-height: 100vh;
+  }
+  .serif-title { font-family: Georgia, 'Times New Roman', serif; }
+</style>
+</head>
+<body class="min-h-screen w-full flex flex-col">
+
+  <!-- Top bar -->
+  <div class="relative px-10 pt-6 max-w-6xl w-full mx-auto">
+    <div class="flex items-center justify-between">
+      <button id="menuBtn" class="w-11 h-11 rounded-xl bg-white/90 flex items-center justify-center shadow-sm hover:bg-white transition-colors md:hidden">
+        <i data-lucide="menu" class="text-slate-700" style="width:22px;height:22px;"></i>
+      </button>
+      <div class="hidden md:block w-11"></div>
+
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="index.html" class="text-sm font-semibold cursor-pointer text-slate-700/70 hover:text-slate-900 transition-colors">Home</a>
+        <a href="index.html#games" class="text-sm font-semibold cursor-pointer text-slate-700/70 hover:text-slate-900 transition-colors">Games</a>
+        <a href="learn.html" class="text-sm font-semibold cursor-pointer text-slate-900">Learn</a>
+      </nav>
+
+      <div class="px-4 py-1.5 rounded-full bg-white/90 shadow-sm">
+        <span class="text-sm font-bold tracking-wide text-slate-800">EN</span>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden mt-3 rounded-2xl bg-white/95 backdrop-blur-sm shadow-md flex flex-col overflow-hidden">
+      <a href="index.html" class="px-5 py-3 text-sm font-semibold text-slate-700 border-b border-slate-100">Home</a>
+      <a href="index.html#games" class="px-5 py-3 text-sm font-semibold text-slate-700 border-b border-slate-100">Games</a>
+      <a href="learn.html" class="px-5 py-3 text-sm font-semibold text-slate-900">Learn</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col items-center mt-6 px-6">
+    <div class="w-16 h-16 rounded-full flex items-center justify-center shadow-md mb-4"
+         style="background: radial-gradient(circle at 30% 30%, #4FA8D8, #0E3D5C);">
+      <i data-lucide="book-open" class="text-cyan-100" style="width:26px;height:26px;"></i>
+    </div>
+    <h1 class="serif-title text-4xl md:text-5xl font-black tracking-wide text-center" style="color:#0B3A5B; letter-spacing:0.03em;">
+      LEARN
+    </h1>
+    <p class="text-base font-medium text-slate-800/80 mt-2 text-center max-w-lg">
+      Short lessons behind the ocean services used in both games.
+    </p>
+  </div>
+
+  <!-- Lesson cards -->
+  <div class="max-w-5xl w-full mx-auto mt-8 mb-10 px-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <!-- PFZ — primary: Smart Fisherman -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+          <i data-lucide="fish" class="text-amber-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is PFZ?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">A Potential Fishing Zone (PFZ) is an area identified as likely to have good fish concentrations, based on ocean data such as temperature and chlorophyll patterns.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/smart-fisherman.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-amber-700 hover:text-amber-900 transition-colors w-fit">
+          TRY IT IN SMART FISHERMAN <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-decision.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Ocean Decision</a>
+          <a href="games/ocean-tycoon.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Ocean Tycoon</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ocean State Forecast — primary: Ocean Tycoon -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+          <i data-lucide="cloud" class="text-emerald-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is Ocean State Forecast?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">The Ocean State Forecast (OSF) predicts waves, wind, and currents so operators can plan safer, more efficient trips.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/ocean-tycoon.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors w-fit">
+          TRY IT IN OCEAN TYCOON <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-decision.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Ocean Decision</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waves — primary: Ocean Decision -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
+          <i data-lucide="waves" class="text-sky-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What are Waves?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">Waves are wind-driven movements of the sea surface. Wave height is a key input into how risky conditions are for small vessels.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/ocean-decision.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-sky-700 hover:text-sky-900 transition-colors w-fit">
+          TRY IT IN OCEAN DECISION <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-tycoon.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Ocean Tycoon</a>
+          <a href="games/smart-fisherman.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">Smart Fisherman</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swell — primary: Ocean Tycoon -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+          <i data-lucide="loader" class="text-emerald-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is Swell?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">Swell is a longer, rolling wave pattern often generated far away, which can make seas feel rougher than local wind alone would suggest.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/ocean-tycoon.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors w-fit">
+          TRY IT IN OCEAN TYCOON <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Ocean Currents — primary: Smart Fisherman -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+          <i data-lucide="wind" class="text-amber-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What are Ocean Currents?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">Currents are large-scale water movements. A favourable current can save fuel; a strong opposing current can waste it and increase risk.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/smart-fisherman.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-amber-700 hover:text-amber-900 transition-colors w-fit">
+          TRY IT IN SMART FISHERMAN <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-tycoon.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Ocean Tycoon</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVAS — primary: Ocean Tycoon -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+          <i data-lucide="ship" class="text-emerald-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is SVAS?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">Small Vessel Advisory and Forecast Services (SVAS) issue guidance specifically calibrated to smaller boats, which are more vulnerable to rough conditions.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/ocean-tycoon.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-emerald-900 transition-colors w-fit">
+          TRY IT IN OCEAN TYCOON <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-decision.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Ocean Decision</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- High Wave Alert — primary: Ocean Decision -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="text-sky-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is a High Wave Alert?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">A High Wave Alert warns that wave heights have crossed a threshold considered unsafe for most small craft in the affected area.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/ocean-decision.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-sky-700 hover:text-sky-900 transition-colors w-fit">
+          TRY IT IN OCEAN DECISION <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-tycoon.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Ocean Tycoon</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tsunami Early Warning — primary: Smart Fisherman -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+          <i data-lucide="radio" class="text-amber-700" style="width:19px;height:19px;"></i>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">What is Tsunami Early Warning?</h2>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">A Tsunami Early Warning is issued based on seismic activity, not visible sea conditions — the sea can look calm even when a warning is active.</p>
+      <div class="flex flex-col gap-2 mt-1">
+        <a href="games/smart-fisherman.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-amber-700 hover:text-amber-900 transition-colors w-fit">
+          TRY IT IN SMART FISHERMAN <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        </a>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span class="text-[11px] font-semibold text-slate-500">Also in:</span>
+          <a href="games/ocean-tycoon.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Ocean Tycoon</a>
+          <a href="games/ocean-decision.html" class="text-[11px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Ocean Decision</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>

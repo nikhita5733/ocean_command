@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ocean Command — Learn the Ocean. Make Better Decisions.</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #BFE3F0 0%, #7FC3DE 20%, #3E8FB8 55%, #1E5F8C 100%);
+    min-height: 100vh;
+  }
+  .serif-title { font-family: Georgia, 'Times New Roman', serif; }
+</style>
+</head>
+<body class="min-h-screen w-full flex flex-col">
+
+  <!-- Top bar -->
+  <div class="relative px-10 pt-6 max-w-6xl w-full mx-auto">
+    <div class="flex items-center justify-between">
+      <button id="menuBtn" class="w-11 h-11 rounded-xl bg-white/90 flex items-center justify-center shadow-sm hover:bg-white transition-colors md:hidden">
+        <i data-lucide="menu" class="text-slate-700" style="width:22px;height:22px;"></i>
+      </button>
+      <div class="hidden md:block w-11"></div>
+
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="index.html" class="text-sm font-semibold cursor-pointer text-slate-900">Home</a>
+        <a href="#games" class="text-sm font-semibold cursor-pointer text-slate-700/70 hover:text-slate-900 transition-colors">Games</a>
+        <a href="learn.html" class="text-sm font-semibold cursor-pointer text-slate-700/70 hover:text-slate-900 transition-colors">Learn</a>
+      </nav>
+
+      <div class="px-4 py-1.5 rounded-full bg-white/90 shadow-sm">
+        <span class="text-sm font-bold tracking-wide text-slate-800">EN</span>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden mt-3 rounded-2xl bg-white/95 backdrop-blur-sm shadow-md flex flex-col overflow-hidden">
+      <a href="index.html" class="px-5 py-3 text-sm font-semibold text-slate-900 border-b border-slate-100">Home</a>
+      <a href="#games" class="px-5 py-3 text-sm font-semibold text-slate-700 border-b border-slate-100">Games</a>
+      <a href="learn.html" class="px-5 py-3 text-sm font-semibold text-slate-700">Learn</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-col items-center mt-6 px-6">
+    <div class="w-20 h-20 rounded-full flex items-center justify-center shadow-md mb-4"
+         style="background: radial-gradient(circle at 30% 30%, #4FA8D8, #0E3D5C);">
+      <i data-lucide="waves" class="text-cyan-100" style="width:34px;height:34px;"></i>
+    </div>
+    <h1 class="serif-title text-5xl font-black tracking-wide text-center" style="color:#0B3A5B; letter-spacing:0.03em;">
+      OCEAN COMMAND
+    </h1>
+    <p class="text-base font-medium text-slate-800/80 mt-2 flex items-center gap-3">
+      <span class="opacity-60">〜</span> Learn the Ocean. Make Better Decisions. <span class="opacity-60">〜</span>
+    </p>
+  </div>
+
+  <!-- Welcome banner -->
+  <div class="max-w-2xl w-full mx-auto mt-6 px-6">
+    <div class="rounded-2xl bg-white/85 backdrop-blur-sm px-6 py-4 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
+        <i data-lucide="waves" class="text-sky-600" style="width:20px;height:20px;"></i>
+      </div>
+      <div>
+        <p class="text-base font-bold text-slate-800">Welcome, Ocean Explorer! 👋</p>
+        <p class="text-sm text-slate-600">Choose a game and start your ocean journey.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game cards -->
+  <div id="games" class="max-w-6xl w-full mx-auto mt-8 px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- GAME 1: OCEAN DECISION -->
+    <div class="rounded-3xl shadow-lg flex flex-col overflow-hidden" style="background: linear-gradient(180deg, #EAF4FB, #D8ECF7); border: 1px solid rgba(255,255,255,0.6);">
+      <div class="relative h-44">
+        <svg viewBox="0 0 300 170" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#D9F0FA" />
+              <stop offset="100%" stop-color="#8FCBE8" />
+            </linearGradient>
+            <linearGradient id="sea1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#5FB6DE" />
+              <stop offset="45%" stop-color="#2E86B8" />
+              <stop offset="100%" stop-color="#134C74" />
+            </linearGradient>
+            <radialGradient id="sun1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF6D8" />
+              <stop offset="100%" stop-color="#FFE28A" />
+            </radialGradient>
+          </defs>
+          <rect width="300" height="170" fill="url(#sky1)" />
+          <circle cx="248" cy="30" r="20" fill="url(#sun1)" opacity="0.9" />
+          <ellipse cx="60" cy="30" rx="26" ry="9" fill="#fff" opacity="0.75" />
+          <ellipse cx="85" cy="24" rx="18" ry="7" fill="#fff" opacity="0.6" />
+          <path d="M0 10 L8 4 M20 6 L28 0" stroke="#3B4A55" stroke-width="1.5" opacity="0.5" fill="none" />
+          <rect y="62" width="300" height="108" fill="url(#sea1)" />
+          <path d="M0 62 Q40 54 80 62 T160 62 T240 62 T300 62 V72 Q260 66 220 72 T140 72 T60 72 T0 68 Z" fill="#8FD6EE" opacity="0.55" />
+          <path d="M0 110 Q30 100 60 110 T120 110 T180 110 T240 110 T300 110 V170 H0 Z" fill="#0F3E63" opacity="0.5" />
+          <path d="M0 135 Q35 128 70 135 T140 135 T210 135 T280 135 T300 133 V170 H0 Z" fill="#0A3252" opacity="0.5" />
+          <line x1="228" y1="82" x2="228" y2="118" stroke="#EDEDED" stroke-width="3" />
+          <circle cx="228" cy="76" r="11" fill="#E9483F" />
+          <circle cx="228" cy="76" r="11" fill="none" stroke="#B9322A" stroke-width="1.5" />
+          <rect x="224" y="72" width="8" height="3" fill="#fff" />
+          <path d="M45 118 L145 118 L133 140 L57 140 Z" fill="#123249" />
+          <path d="M45 118 L145 118 L143 124 L47 124 Z" fill="#1B4B6B" />
+          <rect x="60" y="94" width="60" height="26" rx="3" fill="#EFEAE0" />
+          <rect x="60" y="94" width="60" height="8" rx="3" fill="#DCD4C2" />
+          <rect x="68" y="80" width="24" height="15" rx="2" fill="#0F3E63" />
+          <rect x="70" y="82" width="8" height="6" fill="#BEE3F4" opacity="0.8" />
+          <rect x="80" y="82" width="8" height="6" fill="#BEE3F4" opacity="0.8" />
+          <line x1="95" y1="55" x2="95" y2="80" stroke="#C7C2B6" stroke-width="3" />
+          <circle cx="95" cy="52" r="3.5" fill="#E9483F" />
+          <path d="M95 60 L120 66" stroke="#C7C2B6" stroke-width="1.5" />
+          <path d="M40 128 Q10 122 -5 130" stroke="#DCEFF7" stroke-width="2.5" fill="none" opacity="0.7" />
+          <path d="M42 134 Q8 132 -8 142" stroke="#DCEFF7" stroke-width="2" fill="none" opacity="0.5" />
+          <path d="M170 40 q6 -6 12 0 q6 -6 12 0" stroke="#3B4A55" stroke-width="1.6" fill="none" />
+          <path d="M195 50 q5 -5 10 0 q5 -5 10 0" stroke="#3B4A55" stroke-width="1.4" fill="none" opacity="0.8" />
+        </svg>
+        <div class="absolute inset-x-0 bottom-0 h-10 pointer-events-none" style="background: linear-gradient(180deg, transparent, #D8ECF7);"></div>
+        <span class="absolute top-3 left-3 bg-blue-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">GAME 1</span>
+      </div>
+      <div class="p-6 flex flex-col flex-1">
+        <h2 class="serif-title text-center text-2xl font-black mb-2" style="color:#0B3A5B; letter-spacing:0.02em;">OCEAN DECISION</h2>
+        <p class="text-center text-sm text-slate-700 mb-5 leading-relaxed flex-1">Read ocean conditions and make the safest and smartest decision.</p>
+        <div class="grid grid-cols-3 gap-3 mb-5">
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="waves" style="width:18px;height:18px;color:#0B3A5B;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Make Decisions</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="shield" style="width:18px;height:18px;color:#0B3A5B;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Stay Safe</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="trending-up" style="width:18px;height:18px;color:#0B3A5B;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Improve Awareness</span>
+          </div>
+        </div>
+        <a href="games/ocean-decision.html" class="w-full rounded-2xl py-3.5 text-white font-bold flex items-center justify-center gap-2 shadow-md hover:brightness-105 active:scale-[0.98] transition-all"
+           style="background: linear-gradient(90deg, #1E5FA8, #123D73);">
+          PLAY GAME <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- GAME 2: OCEAN TYCOON -->
+    <div class="rounded-3xl shadow-lg flex flex-col overflow-hidden" style="background: linear-gradient(180deg, #EAF6EE, #DAF0E1); border: 1px solid rgba(255,255,255,0.6);">
+      <div class="relative h-44">
+        <svg viewBox="0 0 300 170" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="landBg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#EAF6E4" />
+              <stop offset="100%" stop-color="#CBE6C0" />
+            </linearGradient>
+            <linearGradient id="waterBoard" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7DC3E4" />
+              <stop offset="100%" stop-color="#2F86B4" />
+            </linearGradient>
+          </defs>
+          <rect width="300" height="170" fill="url(#landBg)" />
+          <g>
+            <rect x="10" y="12" width="82" height="30" rx="4" fill="#E4CE9A" stroke="#C9AE6D" stroke-width="1.5" />
+            <rect x="20" y="18" width="16" height="16" fill="#8B6B3D" />
+            <path d="M18 18 L28 8 L38 18 Z" fill="#7A4A12" />
+            <rect x="44" y="20" width="30" height="14" fill="#F4EAD1" />
+            <rect x="49" y="24" width="6" height="6" fill="#7BAFD4" />
+            <rect x="60" y="24" width="6" height="6" fill="#7BAFD4" />
+          </g>
+          <g>
+            <rect x="208" y="12" width="82" height="30" rx="4" fill="#CFE3F2" stroke="#9FC3DD" stroke-width="1.5" />
+            <rect x="216" y="18" width="20" height="18" fill="#3E7CA8" />
+            <rect x="222" y="24" width="8" height="10" fill="#F4EAD1" />
+            <rect x="244" y="16" width="34" height="20" fill="#FFFFFF" stroke="#B9D3E6" />
+            <text x="261" y="30" font-size="9" fill="#2E6B93" text-anchor="middle" font-weight="bold">$$</text>
+          </g>
+          <g>
+            <rect x="10" y="128" width="82" height="30" rx="4" fill="#E9C6B0" stroke="#CC9878" stroke-width="1.5" />
+            <circle cx="30" cy="140" r="9" fill="#3E4A54" />
+            <circle cx="30" cy="140" r="4" fill="#6B7683" />
+            <rect x="46" y="132" width="34" height="22" fill="#D9BFA8" />
+            <path d="M46 132 L63 122 L80 132 Z" fill="#B4835F" />
+          </g>
+          <g>
+            <rect x="208" y="128" width="82" height="30" rx="4" fill="#BEE0A6" stroke="#8FC26B" stroke-width="1.5" />
+            <circle cx="225" cy="145" r="10" fill="#5C9A47" />
+            <rect x="222" y="150" width="6" height="8" fill="#7A4A12" />
+            <circle cx="255" cy="140" r="8" fill="#6BAD52" />
+            <rect x="252" y="146" width="5" height="8" fill="#7A4A12" />
+            <circle cx="272" cy="146" r="7" fill="#78B85D" />
+          </g>
+          <rect x="96" y="18" width="108" height="134" rx="3" fill="url(#waterBoard)" stroke="#1F638F" stroke-width="2" />
+          <line x1="96" y1="18" x2="204" y2="18" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="40.3" x2="204" y2="40.3" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="62.6" x2="204" y2="62.6" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="84.9" x2="204" y2="84.9" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="107.2" x2="204" y2="107.2" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="129.5" x2="204" y2="129.5" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="96" y1="18" x2="96" y2="152" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="132" y1="18" x2="132" y2="152" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="168" y1="18" x2="168" y2="152" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <line x1="204" y1="18" x2="204" y2="152" stroke="#5FA8D3" stroke-width="0.6" opacity="0.7" />
+          <path d="M96 60 Q120 55 132 60 T168 60 T204 60" stroke="#BEE3F4" stroke-width="1.5" fill="none" opacity="0.5" />
+          <path d="M96 100 Q120 95 132 100 T168 100 T204 100" stroke="#BEE3F4" stroke-width="1.5" fill="none" opacity="0.5" />
+          <path d="M134 78 L166 78 L159 90 L141 90 Z" fill="#12324D" />
+          <rect x="144" y="66" width="12" height="12" rx="1.5" fill="#F4EAD1" />
+          <line x1="150" y1="58" x2="150" y2="66" stroke="#7A4A12" stroke-width="1.5" />
+          <g transform="translate(160,108) rotate(8)">
+            <rect width="18" height="18" rx="3" fill="#FFFFFF" stroke="#C9C2B2" stroke-width="1" />
+            <circle cx="4.5" cy="4.5" r="1.6" fill="#333" />
+            <circle cx="13.5" cy="4.5" r="1.6" fill="#333" />
+            <circle cx="9" cy="9" r="1.6" fill="#333" />
+            <circle cx="4.5" cy="13.5" r="1.6" fill="#333" />
+            <circle cx="13.5" cy="13.5" r="1.6" fill="#333" />
+          </g>
+          <g transform="translate(114,112)">
+            <ellipse cx="8" cy="14" rx="8" ry="3" fill="#C99A2C" />
+            <ellipse cx="8" cy="10" rx="8" ry="3" fill="#E7B93E" />
+            <ellipse cx="8" cy="6" rx="8" ry="3" fill="#F4CE55" />
+            <text x="8" y="8" font-size="6" fill="#8A6A1A" text-anchor="middle" font-weight="bold">$</text>
+          </g>
+        </svg>
+        <div class="absolute inset-x-0 bottom-0 h-10 pointer-events-none" style="background: linear-gradient(180deg, transparent, #DAF0E1);"></div>
+        <span class="absolute top-3 left-3 bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">GAME 2</span>
+      </div>
+      <div class="p-6 flex flex-col flex-1">
+        <h2 class="serif-title text-center text-2xl font-black mb-2" style="color:#1B4D3E; letter-spacing:0.02em;">OCEAN TYCOON</h2>
+        <p class="text-center text-sm text-slate-700 mb-5 leading-relaxed flex-1">Build and manage your coastal operation while adapting to ocean changes.</p>
+        <div class="grid grid-cols-3 gap-3 mb-5">
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="building-2" style="width:18px;height:18px;color:#1B4D3E;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Build Assets</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="coins" style="width:18px;height:18px;color:#1B4D3E;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Grow Income</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="waves" style="width:18px;height:18px;color:#1B4D3E;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Adapt to Ocean</span>
+          </div>
+        </div>
+        <a href="games/ocean-tycoon.html" class="w-full rounded-2xl py-3.5 text-white font-bold flex items-center justify-center gap-2 shadow-md hover:brightness-105 active:scale-[0.98] transition-all"
+           style="background: linear-gradient(90deg, #2E9E5B, #1E6B3E);">
+          PLAY GAME <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- GAME 3: SMART FISHERMAN -->
+    <div class="rounded-3xl shadow-lg flex flex-col overflow-hidden" style="background: linear-gradient(180deg, #FDF3E3, #FBE6C4); border: 1px solid rgba(255,255,255,0.6);">
+      <div class="relative h-44">
+        <svg viewBox="0 0 300 170" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FCE3A6" />
+              <stop offset="60%" stop-color="#F7C979" />
+              <stop offset="100%" stop-color="#F3B85E" />
+            </linearGradient>
+            <linearGradient id="sea2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6FB9CE" />
+              <stop offset="45%" stop-color="#3C90AC" />
+              <stop offset="100%" stop-color="#175A72" />
+            </linearGradient>
+            <radialGradient id="sun2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF3D4" />
+              <stop offset="100%" stop-color="#FCD98A" />
+            </radialGradient>
+          </defs>
+          <rect width="300" height="170" fill="url(#sky2)" />
+          <circle cx="150" cy="52" r="26" fill="url(#sun2)" />
+          <ellipse cx="230" cy="30" rx="22" ry="8" fill="#fff" opacity="0.45" />
+          <ellipse cx="40" cy="24" rx="18" ry="6" fill="#fff" opacity="0.4" />
+          <rect y="66" width="300" height="104" fill="url(#sea2)" />
+          <rect y="66" width="300" height="6" fill="#FCE3A6" opacity="0.8" />
+          <path d="M0 66 Q40 60 80 66 T160 66 T240 66 T300 66 V76 Q260 70 220 76 T140 76 T60 76 T0 72 Z" fill="#FCE3A6" opacity="0.5" />
+          <path d="M0 118 Q35 110 70 118 T140 118 T210 118 T280 118 T300 116 V170 H0 Z" fill="#0F4A5D" opacity="0.5" />
+          <path d="M0 145 Q35 138 70 145 T140 145 T210 145 T280 145 T300 143 V170 H0 Z" fill="#0A3A4A" opacity="0.5" />
+          <path d="M60 122 L142 122 L130 145 L72 145 Z" fill="#12324D" />
+          <path d="M60 122 L142 122 L139 128 L63 128 Z" fill="#1B4B6B" />
+          <rect x="82" y="100" width="34" height="24" rx="2" fill="#F4EAD1" />
+          <rect x="82" y="100" width="34" height="7" rx="2" fill="#DCD0AE" />
+          <line x1="99" y1="70" x2="99" y2="100" stroke="#7A4A12" stroke-width="2.5" />
+          <path d="M99 75 Q135 82 152 108" stroke="#4A3113" stroke-width="1.4" fill="none" />
+          <circle cx="152" cy="108" r="2" fill="#2A1B08" />
+          <path d="M152 108 l-3 6 l6 1 z" fill="#8A6A1A" />
+          <circle cx="92" cy="94" r="5" fill="#3B2A1A" />
+          <path d="M87 99 q5 -3 10 0 l-1 14 h-8 z" fill="#274C63" />
+          <line x1="97" y1="100" x2="108" y2="94" stroke="#274C63" stroke-width="3" stroke-linecap="round" />
+          <path d="M60 128 Q40 138 34 155" stroke="#C7A25A" stroke-width="2" fill="none" stroke-dasharray="3 3" />
+          <g>
+            <path d="M195 100 q12 -18 28 -10 q-8 8 -8 10 q0 2 8 10 q-16 8 -28 -10 Z" fill="#E8A93B" />
+            <circle cx="207" cy="96" r="1.6" fill="#3A2A10" />
+            <path d="M205 100 q6 -3 12 0" stroke="#B87F1E" stroke-width="1" fill="none" />
+          </g>
+          <g opacity="0.85">
+            <path d="M240 122 q8 -12 19 -7 q-5 5 -5 7 q0 2 5 7 q-11 5 -19 -7 Z" fill="#F0C46B" />
+            <circle cx="249" cy="118" r="1.2" fill="#3A2A10" />
+          </g>
+          <g opacity="0.6">
+            <path d="M42 108 q6 -9 14 -5 q-4 4 -4 5 q0 1 4 5 q-8 4 -14 -5 Z" fill="#F0C46B" />
+          </g>
+          <ellipse cx="211" cy="128" rx="16" ry="4" fill="none" stroke="#DCEFF7" stroke-width="1.2" opacity="0.6" />
+          <ellipse cx="211" cy="128" rx="26" ry="6" fill="none" stroke="#DCEFF7" stroke-width="1" opacity="0.4" />
+          <path d="M60 40 q5 -5 10 0 q5 -5 10 0" stroke="#5A4326" stroke-width="1.5" fill="none" opacity="0.7" />
+        </svg>
+        <div class="absolute inset-x-0 bottom-0 h-10 pointer-events-none" style="background: linear-gradient(180deg, transparent, #FBE6C4);"></div>
+        <span class="absolute top-3 left-3 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">GAME 3</span>
+      </div>
+      <div class="p-6 flex flex-col flex-1">
+        <h2 class="serif-title text-center text-2xl font-black mb-2" style="color:#7A4A12; letter-spacing:0.02em;">SMART FISHERMAN</h2>
+        <p class="text-center text-sm text-slate-700 mb-5 leading-relaxed flex-1">Track fish zones and seasons to fish responsibly and maximize your catch.</p>
+        <div class="grid grid-cols-3 gap-3 mb-5">
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="fish" style="width:18px;height:18px;color:#7A4A12;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Find Fish Zones</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="waves" style="width:18px;height:18px;color:#7A4A12;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Read Conditions</span>
+          </div>
+          <div class="bg-white/90 rounded-xl py-3 flex flex-col items-center gap-1.5 shadow-sm">
+            <i data-lucide="trending-up" style="width:18px;height:18px;color:#7A4A12;"></i>
+            <span class="text-xs font-semibold text-slate-700 text-center leading-tight">Boost Catch</span>
+          </div>
+        </div>
+        <a href="games/smart-fisherman.html" class="w-full rounded-2xl py-3.5 text-white font-bold flex items-center justify-center gap-2 shadow-md hover:brightness-105 active:scale-[0.98] transition-all"
+           style="background: linear-gradient(90deg, #D68A22, #A65E12);">
+          PLAY GAME <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Powered by INCOIS -->
+  <div class="max-w-6xl w-full mx-auto mt-10 mb-10 px-6">
+    <div class="rounded-2xl bg-white/80 backdrop-blur-sm px-8 py-6 shadow-sm">
+      <p class="text-center text-sm font-bold tracking-wide text-slate-700 mb-5">POWERED BY INCOIS OCEAN INFORMATION</p>
+      <div class="flex flex-wrap justify-center gap-x-16 gap-y-6">
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="fish" class="text-sky-600" style="width:22px;height:22px;"></i>
+          </div>
+          <span class="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">PFZ Advisory</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="waves" class="text-sky-600" style="width:22px;height:22px;"></i>
+          </div>
+          <span class="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">Ocean State Forecast</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="ship" class="text-sky-600" style="width:22px;height:22px;"></i>
+          </div>
+          <span class="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">Vessel Safety</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="alert-triangle" class="text-red-500" style="width:22px;height:22px;"></i>
+          </div>
+          <span class="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">Alerts &amp; Warnings</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="flag" class="text-sky-600" style="width:22px;height:22px;"></i>
+          </div>
+          <span class="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">Tsunami Early Warning</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>
