@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ocean Command — Decide. Manage. Survive.</title>
+<style>
+  :root{
+    --navy-950:#071322;
+    --navy-900:#0b1d33;
+    --navy-800:#0f2842;
+    --navy-700:#153353;
+    --navy-600:#1c4268;
+    --teal-500:#1fa9a3;
+    --teal-400:#3fd0c9;
+    --cyan-300:#7fe3ff;
+    --gold-500:#e0a83c;
+    --gold-300:#f3cf80;
+    --coral-500:#e0563f;
+    --coral-300:#ff8d78;
+    --green-500:#3fae66;
+    --sand-100:#eef4f6;
+    --ink-100:#dce9f2;
+    --ink-300:#a9c1d4;
+    --font-display:'Rockwell','Georgia',serif;
+    --font-body:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+    --font-mono:'Consolas','Courier New',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--navy-950);color:var(--ink-100);font-family:var(--font-body);}
+  body{min-height:100vh;}
+
+  /* ---------- Title / setup ---------- */
+  #titleScreen{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(63,208,201,.18), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(224,168,60,.12), transparent 45%),
+      linear-gradient(180deg,var(--navy-950),var(--navy-900) 60%,var(--navy-800));
+    padding:40px 20px;text-align:center;
+  }
+  #titleScreen h1{
+    font-family:var(--font-display);font-size:clamp(2.2rem,5.6vw,4rem);letter-spacing:2px;margin:0;
+    color:var(--sand-100);text-shadow:0 0 30px rgba(63,208,201,.35);
+  }
+  #titleScreen .tag{color:var(--teal-400);font-size:1.05rem;letter-spacing:4px;text-transform:uppercase;margin-top:6px;}
+  #titleScreen .lede{max-width:640px;color:var(--ink-300);margin:20px 0 26px;line-height:1.6;font-size:.95rem;}
+  .step{display:none;flex-direction:column;align-items:center;width:100%;}
+  .step.active{display:flex;}
+  .step h2{font-family:var(--font-display);color:var(--sand-100);font-size:1.2rem;margin:0 0 16px;letter-spacing:1px;}
+
+  .count-grid{display:flex;gap:14px;}
+  .count-btn{
+    width:76px;height:76px;border-radius:50%;background:var(--navy-800);border:2px solid var(--navy-600);
+    color:var(--sand-100);font-size:1.6rem;font-family:var(--font-mono);cursor:pointer;transition:.15s;
+  }
+  .count-btn:hover{border-color:var(--teal-400);}
+  .count-btn.selected{border-color:var(--gold-500);background:var(--navy-700);color:var(--gold-300);}
+
+  .setup-rows{display:flex;flex-direction:column;gap:16px;width:100%;max-width:760px;}
+  .setup-row{background:var(--navy-800);border:1px solid var(--navy-600);border-radius:14px;padding:14px 16px;text-align:left;}
+  .setup-row .plabel{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--sand-100);margin-bottom:10px;}
+  .plabel .dot{width:12px;height:12px;border-radius:50%;}
+  .mini-roles{display:flex;gap:10px;flex-wrap:wrap;}
+  .mini-role{
+    flex:1;min-width:150px;background:var(--navy-900);border:2px solid var(--navy-600);border-radius:10px;
+    padding:10px;cursor:pointer;transition:.15s;
+  }
+  .mini-role:hover{border-color:var(--teal-400);}
+  .mini-role.selected{border-color:var(--gold-500);background:var(--navy-700);}
+  .mini-role .icon{font-size:1.3rem;}
+  .mini-role h4{margin:4px 0 2px;font-size:.85rem;color:var(--sand-100);}
+  .mini-role p{margin:0;font-size:.68rem;color:var(--ink-300);line-height:1.3;}
+
+  .nav-btns{display:flex;gap:12px;margin-top:26px;}
+  .ghost-btn{background:transparent;border:1px solid var(--navy-600);color:var(--ink-300);padding:10px 20px;border-radius:24px;cursor:pointer;font-size:.85rem;}
+  .ghost-btn:hover{border-color:var(--teal-400);color:var(--sand-100);}
+  #startBtn{
+    background:linear-gradient(180deg,var(--gold-300),var(--gold-500));color:#2b1c04;border:none;
+    padding:14px 34px;border-radius:30px;font-size:1.05rem;font-weight:700;letter-spacing:1px;cursor:pointer;
+    box-shadow:0 8px 18px rgba(224,168,60,.35);transition:.15s;
+  }
+  #startBtn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  #startBtn:not(:disabled):hover{transform:translateY(-2px);}
+  #nextBtn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ---------- Game layout ---------- */
+  #game{display:none;flex-direction:column;gap:12px;padding:12px;min-height:100vh;}
+  #game.active{display:flex;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;background:var(--navy-800);
+    border:1px solid var(--navy-600);border-radius:14px;padding:10px 16px;}
+  .topbar .brand{display:flex;align-items:center;gap:8px;}
+  .topbar .brand .glyph{font-size:1.4rem;}
+  .topbar .brand b{font-family:var(--font-display);font-size:1.1rem;color:var(--sand-100);letter-spacing:1px;}
+  .topbar .roundinfo{font-family:var(--font-mono);color:var(--ink-300);font-size:.85rem;}
+  #infoBtn{
+    background:var(--navy-700);border:1px solid var(--navy-600);color:var(--teal-400);width:34px;height:34px;
+    border-radius:50%;cursor:pointer;font-weight:700;font-size:.95rem;
+  }
+  #infoBtn:hover{border-color:var(--teal-400);}
+
+  /* players row */
+  #playersRow{display:flex;gap:10px;flex-wrap:wrap;}
+  .player-card{
+    flex:1;min-width:220px;background:var(--navy-800);border:2px solid var(--navy-600);border-radius:12px;padding:10px 12px;
+  }
+  .player-card.active-turn{border-color:var(--gold-500);box-shadow:0 0 14px rgba(224,168,60,.25);}
+  .pc-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .pc-head .avatar{font-size:1.2rem;}
+  .pc-head b{color:var(--sand-100);font-size:.85rem;}
+  .pc-head .turn-badge{margin-left:auto;background:var(--gold-500);color:#2b1c04;font-size:.6rem;font-weight:700;
+    padding:2px 7px;border-radius:10px;letter-spacing:.5px;display:none;}
+  .player-card.active-turn .turn-badge{display:inline-block;}
+  .pc-credits{font-family:var(--font-mono);color:var(--gold-300);font-size:.95rem;margin-bottom:6px;}
+  .pc-meters{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:8px;}
+  .pc-meter{font-size:.62rem;color:var(--ink-300);}
+  .pc-meter .bar{height:5px;background:var(--navy-900);border-radius:3px;margin-top:2px;overflow:hidden;}
+  .pc-meter .bar i{display:block;height:100%;}
+  .pc-meter.s i{background:var(--coral-300);}
+  .pc-meter.e i{background:var(--gold-300);}
+  .pc-meter.a i{background:var(--cyan-300);}
+  .pc-meter.u i{background:var(--green-500);}
+  .pc-deeds{display:flex;gap:6px;overflow-x:auto;padding-top:6px;border-top:1px dashed rgba(255,255,255,.08);min-height:44px;}
+  .deed{
+    flex:none;width:74px;background:var(--navy-900);border-radius:6px;padding:5px;text-align:center;font-size:.58rem;
+    border-top:4px solid var(--teal-400);
+  }
+  .deed .di{font-size:.95rem;}
+  .deed .dn{font-weight:700;color:var(--sand-100);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .deed .dl{color:var(--ink-300);}
+  .deed-empty{font-size:.65rem;color:var(--ink-300);padding:10px 4px;}
+
+  /* main content row */
+  #mainRow{display:grid;grid-template-columns:1fr 320px;gap:14px;flex:1;}
+  @media (max-width:1000px){ #mainRow{grid-template-columns:1fr;} }
+  .panel{background:var(--navy-800);border:1px solid var(--navy-600);border-radius:14px;padding:16px;}
+  .panel h2{font-family:var(--font-display);font-size:1rem;letter-spacing:1px;color:var(--teal-400);
+    text-transform:uppercase;margin:0 0 10px;border-bottom:1px solid var(--navy-600);padding-bottom:8px;}
+
+  #boardWrap{display:flex;flex-direction:column;gap:12px;align-items:center;}
+  #board{
+    display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);
+    width:100%;max-width:620px;aspect-ratio:1/1;gap:4px;background:var(--navy-950);
+    border:3px solid var(--navy-600);border-radius:16px;padding:6px;
+  }
+  .tile{
+    position:relative;border-radius:8px;padding:5px 3px;font-size:.6rem;line-height:1.1;color:var(--ink-100);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    border:1px solid rgba(255,255,255,.06);overflow:hidden;
+  }
+  .tile .icon{font-size:1.1rem;margin-bottom:2px;}
+  .tile .name{font-weight:700;font-size:.58rem;text-transform:uppercase;letter-spacing:.3px;}
+  .tile .price{font-family:var(--font-mono);font-size:.56rem;color:var(--gold-300);margin-top:2px;}
+  .tile.owned::after{content:'●';position:absolute;top:3px;right:5px;color:var(--gold-300);font-size:.6rem;}
+  .tile.center{grid-column:2/6;grid-row:2/6;background:linear-gradient(160deg,var(--navy-700),var(--navy-900));
+    display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:12px;}
+  .tile.center h3{font-family:var(--font-display);color:var(--sand-100);font-size:1.4rem;margin:0;letter-spacing:1px;}
+  .tile.center .sub2{color:var(--teal-400);font-size:.72rem;letter-spacing:2px;margin-top:4px;}
+  .tile.center .boatmark{font-size:1.8rem;margin-top:10px;}
+  .tile.type-asset{background:var(--navy-700);}
+  .tile.type-pfz{background:#123a3a;}
+  .tile.type-card{background:#16324d;}
+  .tile.type-reward{background:#3b3210;}
+  .tile.type-hazard{background:#3a1414;}
+  .tile.type-special{background:var(--navy-600);}
+  .tile.current{box-shadow:0 0 0 3px var(--cyan-300) inset, 0 0 14px rgba(127,227,255,.6);}
+  .tokrow{position:absolute;bottom:2px;left:0;right:0;display:flex;justify-content:center;gap:2px;flex-wrap:wrap;}
+  .ptoken{width:15px;height:15px;border-radius:50%;font-size:.5rem;color:#04211f;display:flex;align-items:center;
+    justify-content:center;font-weight:700;border:1px solid rgba(255,255,255,.5);}
+
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;}
+  #diceBtn{
+    background:linear-gradient(180deg,var(--teal-400),var(--teal-500));border:none;color:#04211f;font-weight:700;
+    padding:12px 22px;border-radius:12px;cursor:pointer;font-size:1rem;letter-spacing:.5px;
+  }
+  #diceBtn:disabled{opacity:.35;cursor:not-allowed;}
+  #diceResult{font-family:var(--font-mono);font-size:1.1rem;color:var(--gold-300);min-width:60px;text-align:center;}
+  #turnLabel{font-family:var(--font-mono);color:var(--ink-300);font-size:.85rem;}
+
+  #eventArea{min-height:120px;}
+  .event-card{background:var(--navy-700);border:1px solid var(--navy-600);border-radius:10px;padding:12px;margin-bottom:10px;}
+  .event-card .etitle{font-weight:700;color:var(--sand-100);font-size:.85rem;letter-spacing:.5px;text-transform:uppercase;}
+  .event-card.hazard{border-color:var(--coral-500);}
+  .event-card.reward{border-color:var(--gold-500);}
+  .event-card p{font-size:.8rem;color:var(--ink-300);margin:6px 0;}
+  .choice-btn{
+    display:block;width:100%;text-align:left;background:var(--navy-800);border:1px solid var(--navy-600);color:var(--ink-100);
+    padding:9px 10px;border-radius:8px;margin-top:6px;cursor:pointer;font-size:.78rem;
+  }
+  .choice-btn:hover{border-color:var(--teal-400);}
+  .choice-btn .delta{float:right;font-family:var(--font-mono);color:var(--teal-400);font-size:.72rem;}
+  .log-list{max-height:160px;overflow-y:auto;font-size:.72rem;color:var(--ink-300);margin-top:10px;}
+  .log-list div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06);}
+
+  /* info modal */
+  #infoModal{display:none;position:fixed;inset:0;background:rgba(4,10,18,.85);z-index:60;align-items:center;justify-content:center;padding:20px;}
+  #infoModal.active{display:flex;}
+  #infoCard{background:var(--navy-800);border:1px solid var(--navy-600);border-radius:16px;max-width:520px;width:100%;
+    padding:22px;max-height:82vh;overflow-y:auto;}
+  #infoCard h2{margin-top:0;}
+  #infoCard .closeX{float:right;background:none;border:none;color:var(--ink-300);font-size:1.2rem;cursor:pointer;}
+  .score-weights div{display:flex;justify-content:space-between;font-size:.82rem;padding:3px 0;color:var(--ink-300);}
+  .score-weights b{color:var(--sand-100);}
+  .legend-item{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;color:var(--ink-300);margin:6px 0;}
+  .legend-swatch{width:14px;height:14px;border-radius:4px;flex:none;margin-top:2px;}
+  .incois-list li{font-size:.78rem;color:var(--ink-300);margin:4px 0;}
+
+  /* end screen */
+  #endScreen{display:none;position:fixed;inset:0;background:rgba(4,10,18,.92);z-index:50;align-items:center;justify-content:center;padding:20px;}
+  #endScreen.active{display:flex;}
+  #endCard{background:var(--navy-800);border:2px solid var(--gold-500);border-radius:18px;max-width:560px;width:100%;padding:28px;text-align:center;max-height:88vh;overflow-y:auto;}
+  #endCard h2{font-family:var(--font-display);color:var(--gold-300);font-size:1.7rem;margin:0 0 14px;}
+  .leader-row{display:flex;justify-content:space-between;align-items:center;background:var(--navy-700);border-radius:10px;
+    padding:10px 14px;margin-bottom:8px;text-align:left;}
+  .leader-row.win{border:1px solid var(--gold-500);}
+  .leader-row .lname{font-weight:700;color:var(--sand-100);font-size:.88rem;}
+  .leader-row .lscore{font-family:var(--font-mono);color:var(--gold-300);font-size:1.1rem;}
+  .leader-row .lsub{font-size:.68rem;color:var(--ink-300);margin-top:2px;}
+  #restartBtn{margin-top:16px;background:var(--teal-400);border:none;padding:10px 24px;border-radius:24px;font-weight:700;cursor:pointer;color:#04211f;}
+  #home-link{position:fixed;top:14px;left:14px;z-index:200;background:rgba(11,29,51,.85);color:var(--sand-100);padding:9px 16px;border-radius:24px;border:1px solid var(--navy-600);text-decoration:none;font-family:var(--font-body);font-weight:700;font-size:12.5px;letter-spacing:.03em;display:flex;align-items:center;gap:6px;transition:all .2s;}
+  #home-link:hover{border-color:var(--teal-400);color:var(--teal-400);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+<a id="home-link" href="../index.html">⬅ Home</a>
+
+<!-- ============ TITLE / SETUP ============ -->
+<div id="titleScreen">
+  <h1>🌊 OCEAN COMMAND</h1>
+  <div class="tag">Decide · Manage · Survive</div>
+  <p class="lede">An INCOIS-powered ocean strategy game. Choose sea-going roles, read real ocean-information services (PFZ, wave &amp; wind alerts, SST, advisories — simulated), and make the calls that keep you safe and your operation profitable.</p>
+
+  <div class="step active" id="stepCount">
+    <h2>How many players?</h2>
+    <div class="count-grid" id="countGrid"></div>
+    <div class="nav-btns"><button class="ghost-btn" id="toRolesBtn" disabled>Next →</button></div>
+  </div>
+
+  <div class="step" id="stepRoles">
+    <h2>Choose each player's role</h2>
+    <div class="setup-rows" id="setupRows"></div>
+    <div class="nav-btns">
+      <button class="ghost-btn" id="backToCountBtn">← Back</button>
+      <button id="startBtn" disabled>Set Sail →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ INFO / RULES MODAL ============ -->
+<div id="infoModal">
+  <div id="infoCard">
+    <button class="closeX" id="closeInfo">✕</button>
+    <h2 style="font-family:var(--font-display);color:var(--sand-100);">⚓ Ocean Command — Rules</h2>
+
+    <h3 style="color:var(--teal-400);font-size:.9rem;text-transform:uppercase;margin-bottom:4px;">Objective</h3>
+    <p style="font-size:.82rem;color:var(--ink-300);margin-top:0;">Run the most successful, sustainable ocean operation using INCOIS information to guide every move. Highest Ocean Score after 20 rounds wins.</p>
+
+    <h3 style="color:var(--teal-400);font-size:.9rem;text-transform:uppercase;margin-bottom:4px;">Win by Ocean Score</h3>
+    <div class="score-weights">
+      <div><span>🛡️ Safety</span><b>30%</b></div>
+      <div><span>💰 Economy</span><b>30%</b></div>
+      <div><span>🌊 Ocean Awareness</span><b>25%</b></div>
+      <div><span>🌱 Sustainability</span><b>15%</b></div>
+    </div>
+
+    <h3 style="color:var(--teal-400);font-size:.9rem;text-transform:uppercase;margin:14px 0 4px;">Space Types</h3>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--navy-700);"></span>Coastal Asset — buy, upgrade, or pay toll if another player owns it</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#123a3a;"></span>PFZ Zone — fishing opportunity, based on INCOIS PFZ advisories</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#16324d;"></span>Ocean Card — draw a condition &amp; decide</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#3b3210;"></span>Ocean Service Reward — bonus for smart play</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#3a1414;"></span>Hazard Zone — high wave / alert response</div>
+
+    <h3 style="color:var(--teal-400);font-size:.9rem;text-transform:uppercase;margin:14px 0 4px;">INCOIS Services Used</h3>
+    <ul class="incois-list" style="padding-left:18px;margin:0;">
+      <li>Potential Fishing Zone (PFZ)</li>
+      <li>Ocean State Forecast (OSF)</li>
+      <li>Small Vessel Advisory (SVAS)</li>
+      <li>High Wave Alert</li>
+      <li>Swell Surge Alert</li>
+      <li>Ocean Current Alert</li>
+      <li>Tsunami Early Warning</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ END SCREEN ============ -->
+<div id="endScreen">
+  <div id="endCard">
+    <h2>🏆 Voyage Complete</h2>
+    <div id="leaderboard"></div>
+    <div id="endLessons" style="text-align:left;font-size:.78rem;color:var(--ink-300);margin-top:16px;line-height:1.6;">
+      <b>Key Lessons</b><br>
+      🐟 PFZ advisories can guide fishing decisions<br>
+      🌊 Ocean conditions affect every kind of operation<br>
+      ⚠️ Alerts and advisories change business risk<br>
+      📡 Better information improves decisions<br>
+      🛡️ Prioritising safety protects long-term value
+    </div>
+    <button id="restartBtn">Play Again</button>
+  </div>
+</div>
+
+<!-- ============ MAIN GAME ============ -->
+<div id="game">
+  <div class="topbar">
+    <div class="brand"><span class="glyph">⚓</span><b>OCEAN COMMAND</b></div>
+    <div class="roundinfo" id="roundInfo">Round 1 / 20</div>
+    <button id="infoBtn" title="Rules">ⓘ</button>
+  </div>
+
+  <div id="playersRow"></div>
+
+  <div id="mainRow">
+    <div class="panel" id="center">
+      <div id="boardWrap">
+        <div id="board"></div>
+        <div class="controls">
+          <div id="turnLabel">Player 1's turn</div>
+          <button id="diceBtn">🎲 Roll Dice</button>
+          <div id="diceResult">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="eventPanel">
+      <h2>Ocean Update</h2>
+      <div id="eventArea"><p style="font-size:.8rem;color:var(--ink-300);">Roll the dice to begin. Ocean conditions and INCOIS advisories will appear here.</p></div>
+      <div class="log-list" id="logList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const PLAYER_COLORS = ['#3fd0c9','#e0a83c','#e0563f','#7fe3ff'];
+
+const ROLES = [
+  {id:'fisher', icon:'🎣', name:'Fisherman', desc:'Runs fishing operations. PFZ and wave alerts are your bread and butter.', perk:'+2 Ocean Awareness/round, PFZ zones 20% cheaper', start:{credits:50000, safety:70, economy:45, awareness:45, sustain:50}},
+  {id:'captain', icon:'🚢', name:'Ship Captain', desc:'Runs transport & harbour services. Stability over speculation.', perk:'+1500 credits starting bonus, stable-income assets cheaper', start:{credits:51500, safety:75, economy:55, awareness:35, sustain:45}},
+  {id:'tourism', icon:'🏖️', name:'Tourism Operator', desc:'Runs beach & marine tourism. High reward, high sea-state sensitivity.', perk:'Tourism assets earn +20% in calm conditions', start:{credits:50000, safety:65, economy:50, awareness:35, sustain:55}},
+];
+
+// 20-tile ring (indices 0-19), matching a 6x6 perimeter board
+const TILES = [
+  {i:0,  type:'special', name:'Harbour Start', icon:'⚓'},
+  {i:1,  type:'asset',   name:'Gujarat Coastal Zone', icon:'🏙️', price:12000, income:2000},
+  {i:2,  type:'reward',  name:'Ocean Service Reward', icon:'🎁'},
+  {i:3,  type:'asset',   name:'Maharashtra Coast', icon:'🌴', price:14000, income:2200},
+  {i:4,  type:'card',    name:'Ocean Card', icon:'🌊'},
+  {i:5,  type:'special', name:'Just Visiting / Harbour', icon:'🛟'},
+  {i:6,  type:'asset',   name:'Kerala Coast', icon:'🌊', price:13000, income:2100},
+  {i:7,  type:'pfz',     name:'PFZ Zone — Arabian Sea', icon:'🐟'},
+  {i:8,  type:'hazard',  name:'Swell Surge Zone', icon:'🌊'},
+  {i:9,  type:'special', name:'Go To Harbour', icon:'➡️'},
+  {i:10, type:'asset',   name:'Lakshadweep Ops Zone', icon:'🏝️', price:22000, income:3200},
+  {i:11, type:'asset',   name:'Karnataka Coast', icon:'🏘️', price:15000, income:2300},
+  {i:12, type:'card',    name:'Ocean Card', icon:'🌊'},
+  {i:13, type:'asset',   name:'Odisha Coastal Zone', icon:'🛕', price:19000, income:2800},
+  {i:14, type:'hazard',  name:'Current Alert Zone', icon:'🌀'},
+  {i:15, type:'special', name:'Go To Jail (Ops Halt)', icon:'🚧'},
+  {i:16, type:'asset',   name:'West Bengal Coast', icon:'🌉', price:17000, income:2600},
+  {i:17, type:'reward',  name:'Ocean Service Reward', icon:'🎁'},
+  {i:18, type:'pfz',     name:'PFZ Zone — Bay of Bengal', icon:'🐟'},
+  {i:19, type:'asset',   name:'Andhra Coastal Zone', icon:'🏖️', price:18000, income:2700},
+];
+
+const OCEAN_CARDS = [
+  {title:'High Wave Watch', info:'High waves forecast for your area (INCOIS Wave Forecast).', choices:[
+    {label:'Continue Offshore', delta:{credits:500, safety:-20}, note:'Risky but profitable'},
+    {label:'Fish Near Shore',   delta:{credits:200, safety:-5},  note:'Reduced but safer catch'},
+    {label:'Return to Harbour', delta:{credits:-100, safety:15, awareness:5}, note:'Safety first'},
+  ]},
+  {title:'PFZ Opportunity', info:'A Potential Fishing Zone was detected 12 km away (INCOIS PFZ advisory).', choices:[
+    {label:'Go to PFZ',        delta:{credits:800, economy:10, awareness:10}, note:'High yield, uses fuel'},
+    {label:'Fish Near Shore',  delta:{credits:350, economy:4}, note:'Lower yield, safe'},
+    {label:'Stay at Harbour',  delta:{credits:0, safety:5}, note:'No risk, no reward'},
+  ]},
+  {title:'Small Vessel Advisory', info:'Conditions may be unsafe for your vessel category (INCOIS SVAS).', choices:[
+    {label:'Continue',        delta:{credits:300, safety:-20}, note:'Ignore the advisory'},
+    {label:'Change Route',    delta:{credits:0, safety:-5, awareness:5}, note:'Adjust course'},
+    {label:'Return to Harbour', delta:{credits:-50, safety:15, awareness:10}, note:'Heed the advisory'},
+  ]},
+  {title:'SST Update', info:'Sea Surface Temperature is favourable for fishing activity.', choices:[
+    {label:'Target the warm patch', delta:{credits:600, awareness:8, economy:6}, note:'INCOIS SST-guided catch'},
+    {label:'Ignore & fish as usual', delta:{credits:150}, note:'No advisory used'},
+  ]},
+  {title:'Strong Wind Alert', info:'Offshore winds have picked up — fuel costs rise for boats venturing far.', choices:[
+    {label:'Push offshore anyway', delta:{credits:-200, safety:-10}, note:'Costly and risky'},
+    {label:'Work coastal waters',  delta:{credits:100, safety:5}, note:'Lower cost, lower reward'},
+  ]},
+  {title:'Ocean Current Shift', info:'Current patterns have changed, affecting transport routes.', choices:[
+    {label:'Reroute using forecast', delta:{credits:300, awareness:10, sustain:5}, note:'Fuel-efficient route'},
+    {label:'Keep old route',         delta:{credits:-150, sustain:-5}, note:'Wastes fuel'},
+  ]},
+];
+
+const REWARD_CARDS = [
+  {title:'Safety First', info:'You followed an advisory and avoided risk.', delta:{safety:20, sustain:5}},
+  {title:'PFZ Success',  info:'Great catch! You used PFZ information effectively.', delta:{credits:500, awareness:10}},
+  {title:'Current Smart', info:'You navigated using ocean current information, saving fuel.', delta:{sustain:15, credits:150}},
+  {title:'Information Advantage', info:'You checked the latest ocean advisory before investing.', delta:{awareness:15}},
+];
+
+const HAZARD_EVENTS = [
+  {title:'⚠️ High Wave Alert', info:'High waves expected across your operating zone.', choices:[
+    {label:'Continue Operations', delta:{credits:400, safety:-25}, note:'High risk'},
+    {label:'Suspend Operations',  delta:{credits:0, safety:20, sustain:5, awareness:5}, note:'Protects crew & assets'},
+  ]},
+  {title:'🚨 Tsunami Early Warning', info:'INCOIS Tsunami Early Warning issued for the coast.', choices:[
+    {label:'Move to Deep Sea', delta:{credits:-100, safety:15}, note:'Standard protocol'},
+    {label:'Ignore Warning',   delta:{credits:300, safety:-40}, note:'Extremely risky'},
+    {label:'Return to Harbour & Evacuate', delta:{credits:-200, safety:25, awareness:10, sustain:5}, note:'Safest response'},
+  ]},
+  {title:'🌀 Ocean Current Alert', info:'Strong, unpredictable currents reported near your route.', choices:[
+    {label:'Reroute',   delta:{credits:-100, safety:10, awareness:5}, note:'Small delay'},
+    {label:'Push Through', delta:{credits:200, safety:-15}, note:'Saves time, risky'},
+  ]},
+];
+
+/* ===================== SETUP STATE ===================== */
+let numPlayers = 0;
+let playerRoleChoice = []; // roleIndex per player slot
+
+const countGrid = document.getElementById('countGrid');
+[1,2,3,4].forEach(n=>{
+  const b = document.createElement('button');
+  b.className='count-btn'; b.textContent=n;
+  b.onclick = ()=>{
+    document.querySelectorAll('.count-btn').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+    numPlayers = n;
+    playerRoleChoice = new Array(n).fill(null);
+    document.getElementById('toRolesBtn').disabled = false;
+  };
+  countGrid.appendChild(b);
+});
+
+document.getElementById('toRolesBtn').onclick = ()=>{
+  buildRoleSetupRows();
+  document.getElementById('stepCount').classList.remove('active');
+  document.getElementById('stepRoles').classList.add('active');
+};
+document.getElementById('backToCountBtn').onclick = ()=>{
+  document.getElementById('stepRoles').classList.remove('active');
+  document.getElementById('stepCount').classList.add('active');
+};
+
+function buildRoleSetupRows(){
+  const wrap = document.getElementById('setupRows');
+  wrap.innerHTML = '';
+  for(let p=0;p<numPlayers;p++){
+    const row = document.createElement('div');
+    row.className = 'setup-row';
+    row.innerHTML = `<div class="plabel"><span class="dot" style="background:${PLAYER_COLORS[p]}"></span>Player ${p+1}</div>
+      <div class="mini-roles" data-player="${p}"></div>`;
+    const mr = row.querySelector('.mini-roles');
+    ROLES.forEach((r, ridx)=>{
+      const rc = document.createElement('div');
+      rc.className = 'mini-role';
+      rc.innerHTML = `<div class="icon">${r.icon}</div><h4>${r.name}</h4><p>${r.perk}</p>`;
+      rc.onclick = ()=>{
+        mr.querySelectorAll('.mini-role').forEach(x=>x.classList.remove('selected'));
+        rc.classList.add('selected');
+        playerRoleChoice[p] = ridx;
+        checkAllRolesChosen();
+      };
+      mr.appendChild(rc);
+    });
+    wrap.appendChild(row);
+  }
+}
+function checkAllRolesChosen(){
+  document.getElementById('startBtn').disabled = playerRoleChoice.some(x=>x===null);
+}
+
+document.getElementById('startBtn').onclick = ()=>{
+  initGame();
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('game').classList.add('active');
+  buildBoard();
+  renderAll();
+};
+
+document.getElementById('infoBtn').onclick = ()=> document.getElementById('infoModal').classList.add('active');
+document.getElementById('closeInfo').onclick = ()=> document.getElementById('infoModal').classList.remove('active');
+
+/* ===================== GAME STATE ===================== */
+const TOTAL_ROUNDS = 20;
+let players = [];
+let tileOwners = {}; // tileIndex -> {owner, level}
+let currentPlayerIndex = 0;
+let turnCounter = 0;
+let awaitingChoice = false;
+
+function clamp(v){return Math.max(0, Math.min(100, v));}
+
+function initGame(){
+  players = [];
+  tileOwners = {};
+  currentPlayerIndex = 0;
+  turnCounter = 0;
+  for(let p=0;p<numPlayers;p++){
+    const role = ROLES[playerRoleChoice[p]];
+    players.push({
+      name:`Player ${p+1}`, role, color:PLAYER_COLORS[p],
+      pos:0, credits:role.start.credits, safety:role.start.safety,
+      economy:role.start.economy, awareness:role.start.awareness, sustain:role.start.sustain,
+      log:[],
+    });
+  }
+}
+
+/* ===================== BOARD RENDER ===================== */
+function buildBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const positions = [];
+  for(let c=1;c<=6;c++) positions.push([1,c]);
+  for(let r=2;r<=6;r++) positions.push([r,6]);
+  for(let c=5;c>=1;c--) positions.push([6,c]);
+  for(let r=5;r>=2;r--) positions.push([r,1]);
+
+  const center = document.createElement('div');
+  center.className = 'tile center';
+  center.innerHTML = `<h3>OCEAN<br>COMMAND</h3><div class="sub2">DECIDE · MANAGE · SURVIVE</div><div class="boatmark">🚤</div>`;
+  board.appendChild(center);
+
+  TILES.forEach((t, idx)=>{
+    const [r,c] = positions[idx];
+    const el = document.createElement('div');
+    el.className = `tile type-${t.type}`;
+    el.style.gridRow = r; el.style.gridColumn = c;
+    el.id = `tile-${t.i}`;
+    el.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.name}</div>${t.price?`<div class="price">₹${t.price.toLocaleString()}</div>`:''}<div class="tokrow" id="tokrow-${t.i}"></div>`;
+    board.appendChild(el);
+  });
+}
+
+function renderTokens(){
+  document.querySelectorAll('.tokrow').forEach(t=>t.innerHTML='');
+  document.querySelectorAll('.tile').forEach(t=>t.classList.remove('current'));
+  players.forEach((pl, idx)=>{
+    const row = document.getElementById(`tokrow-${pl.pos}`);
+    if(row) row.innerHTML += `<span class="ptoken" style="background:${pl.color}">${idx+1}</span>`;
+  });
+  const cur = document.getElementById(`tile-${players[currentPlayerIndex].pos}`);
+  if(cur) cur.classList.add('current');
+}
+
+function renderOwnership(){
+  TILES.filter(t=>t.type==='asset').forEach(t=>{
+    const el = document.getElementById(`tile-${t.i}`);
+    if(el) el.classList.toggle('owned', !!tileOwners[t.i]);
+  });
+}
+
+function renderPlayersRow(){
+  const row = document.getElementById('playersRow');
+  row.innerHTML = '';
+  players.forEach((pl, idx)=>{
+    const deeds = Object.entries(tileOwners).filter(([ti,o])=>o.owner===idx);
+    const deedsHtml = deeds.length
+      ? deeds.map(([ti,o])=>{
+          const t = TILES.find(x=>x.i==ti);
+          return `<div class="deed" style="border-top-color:${pl.color}"><div class="di">${t.icon}</div><div class="dn">${t.name}</div><div class="dl">Lv${o.level} · ₹${(t.income*o.level).toLocaleString()}</div></div>`;
+        }).join('')
+      : `<div class="deed-empty">No properties yet</div>`;
+    const card = document.createElement('div');
+    card.className = 'player-card' + (idx===currentPlayerIndex ? ' active-turn' : '');
+    card.innerHTML = `
+      <div class="pc-head"><span class="avatar">${pl.role.icon}</span><b>${pl.name}</b><span class="turn-badge">TURN</span></div>
+      <div class="pc-credits">₹${pl.credits.toLocaleString()}</div>
+      <div class="pc-meters">
+        <div class="pc-meter s">Safety ${Math.round(pl.safety)}<div class="bar"><i style="width:${pl.safety}%"></i></div></div>
+        <div class="pc-meter e">Economy ${Math.round(pl.economy)}<div class="bar"><i style="width:${pl.economy}%"></i></div></div>
+        <div class="pc-meter a">Awareness ${Math.round(pl.awareness)}<div class="bar"><i style="width:${pl.awareness}%"></i></div></div>
+        <div class="pc-meter u">Sustain ${Math.round(pl.sustain)}<div class="bar"><i style="width:${pl.sustain}%"></i></div></div>
+      </div>
+      <div class="pc-deeds">${deedsHtml}</div>
+    `;
+    row.appendChild(card);
+  });
+}
+
+function renderAll(){
+  renderTokens();
+  renderOwnership();
+  renderPlayersRow();
+  document.getElementById('roundInfo').textContent = `Round ${Math.floor(turnCounter/numPlayers)+1} / ${TOTAL_ROUNDS}`;
+  document.getElementById('turnLabel').textContent = `${players[currentPlayerIndex].name}'s turn (${players[currentPlayerIndex].role.name})`;
+}
+
+function log(msg){
+  const pl = players[currentPlayerIndex];
+  pl.log.unshift(msg);
+  document.getElementById('logList').innerHTML = pl.log.slice(0,30).map(m=>`<div><b style="color:${pl.color}">${pl.name}:</b> ${m}</div>`).join('') +
+    document.getElementById('logList').innerHTML;
+}
+function resetLogView(){
+  // show combined recent logs across all players, newest first
+  const all = [];
+  players.forEach(pl=> pl.log.forEach(m=> all.push({m, color:pl.color, name:pl.name})) );
+  document.getElementById('logList').innerHTML = all.slice(0,40).map(x=>`<div><b style="color:${x.color}">${x.name}:</b> ${x.m}</div>`).join('');
+}
+
+function deltaLabel(delta){
+  const parts=[];
+  if(delta.credits) parts.push(`₹${delta.credits>0?'+':''}${delta.credits}`);
+  if(delta.safety) parts.push(`Safety ${delta.safety>0?'+':''}${delta.safety}`);
+  if(delta.economy) parts.push(`Econ ${delta.economy>0?'+':''}${delta.economy}`);
+  if(delta.awareness) parts.push(`Aware ${delta.awareness>0?'+':''}${delta.awareness}`);
+  if(delta.sustain) parts.push(`Sust ${delta.sustain>0?'+':''}${delta.sustain}`);
+  return parts.join(' · ');
+}
+
+function applyDelta(delta, contextLabel){
+  if(!delta) return;
+  const pl = players[currentPlayerIndex];
+  if(delta.credits) pl.credits = Math.max(0, pl.credits + delta.credits);
+  if(delta.safety) pl.safety = clamp(pl.safety + delta.safety);
+  if(delta.economy) pl.economy = clamp(pl.economy + delta.economy);
+  if(delta.awareness) pl.awareness = clamp(pl.awareness + delta.awareness);
+  if(delta.sustain) pl.sustain = clamp(pl.sustain + delta.sustain);
+  renderPlayersRow();
+  pl.log.unshift(`${contextLabel}: ${deltaLabel(delta)}`);
+  resetLogView();
+}
+
+/* ===================== EVENT RENDERING ===================== */
+function showEvent(html){ document.getElementById('eventArea').innerHTML = html; }
+
+function showChoiceCard(cardType, card, onResolve){
+  const cls = cardType==='hazard' ? 'hazard' : (cardType==='reward' ? 'reward' : '');
+  let html = `<div class="event-card ${cls}"><div class="etitle">${card.title}</div><p>${card.info}</p>`;
+  if(card.choices){
+    card.choices.forEach((c, idx)=>{
+      html += `<button class="choice-btn" data-idx="${idx}"><span>${c.label}</span><span class="delta">${deltaLabel(c.delta)}</span><br><small style="color:var(--ink-300);">${c.note||''}</small></button>`;
+    });
+  }
+  html += `</div>`;
+  showEvent(html);
+  if(card.choices){
+    document.querySelectorAll('.choice-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const c = card.choices[btn.dataset.idx];
+        applyDelta(c.delta, card.title);
+        document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+        onResolve && onResolve();
+      };
+    });
+  }
+}
+
+/* ===================== TURN LOGIC ===================== */
+document.getElementById('diceBtn').onclick = ()=>{
+  if(awaitingChoice) return;
+  const roll = 1 + Math.floor(Math.random()*6);
+  document.getElementById('diceResult').textContent = roll;
+  const pl = players[currentPlayerIndex];
+  pl.pos = (pl.pos + roll) % TILES.length;
+  renderTokens();
+  resolveTile(TILES[pl.pos]);
+};
+
+function endTurn(){
+  awaitingChoice = false;
+  const pl = players[currentPlayerIndex];
+  // passive income from this player's owned assets
+  let income = 0;
+  Object.entries(tileOwners).filter(([ti,o])=>o.owner===currentPlayerIndex).forEach(([ti,o])=>{
+    const t = TILES.find(x=>x.i==ti);
+    income += t.income * o.level;
+  });
+  if(income>0){
+    pl.credits += income;
+    pl.economy = clamp(pl.economy + Math.min(6, income/1500));
+    pl.log.unshift(`Collected ₹${income.toLocaleString()} from owned assets.`);
+  }
+  const ownedCount = Object.values(tileOwners).filter(o=>o.owner===currentPlayerIndex).length;
+  const opCost = ownedCount * 300;
+  if(opCost>0){
+    pl.credits = Math.max(0, pl.credits - opCost);
+    pl.log.unshift(`Paid ₹${opCost.toLocaleString()} in operating costs.`);
+  }
+  resetLogView();
+  renderPlayersRow();
+
+  turnCounter++;
+  currentPlayerIndex = (currentPlayerIndex+1) % numPlayers;
+  document.getElementById('roundInfo').textContent = `Round ${Math.floor(turnCounter/numPlayers)+1} / ${TOTAL_ROUNDS}`;
+  document.getElementById('turnLabel').textContent = `${players[currentPlayerIndex].name}'s turn (${players[currentPlayerIndex].role.name})`;
+  document.getElementById('diceResult').textContent = '–';
+  renderTokens(); renderPlayersRow();
+
+  if(Math.floor(turnCounter/numPlayers) >= TOTAL_ROUNDS){
+    setTimeout(endGame, 400);
+  }
+}
+
+function resolveTile(t){
+  const pl = players[currentPlayerIndex];
+  if(t.type==='special'){
+    showEvent(`<div class="event-card"><div class="etitle">${t.icon} ${t.name}</div><p>A quiet stop. No ocean event here this round.</p></div>`);
+    endTurn();
+    return;
+  }
+  if(t.type==='asset'){
+    const owner = tileOwners[t.i];
+    if(owner && owner.owner === currentPlayerIndex){
+      const upgradeCost = Math.round(t.price * 0.6 * (owner.level+1));
+      awaitingChoice = true;
+      showEvent(`<div class="event-card"><div class="etitle">${t.icon} ${t.name} (Owned, Lv${owner.level})</div>
+        <p>Current income: ₹${(t.income*owner.level).toLocaleString()}/round.</p>
+        <button class="choice-btn" id="upgradeBtn"><span>Upgrade to Lv${owner.level+1}</span><span class="delta">-₹${upgradeCost.toLocaleString()}</span></button>
+        <button class="choice-btn" id="skipBtn"><span>Skip</span></button></div>`);
+      document.getElementById('upgradeBtn').onclick = ()=>{
+        if(pl.credits >= upgradeCost){
+          pl.credits -= upgradeCost; owner.level++;
+          pl.economy = clamp(pl.economy+4);
+          pl.log.unshift(`Upgraded ${t.name} to Lv${owner.level}.`); resetLogView();
+          renderPlayersRow(); renderOwnership();
+        } else { pl.log.unshift(`Not enough credits to upgrade ${t.name}.`); resetLogView(); }
+        endTurn();
+      };
+      document.getElementById('skipBtn').onclick = endTurn;
+      return;
+    } else if(owner){
+      const other = players[owner.owner];
+      const toll = Math.round(t.income * owner.level * 0.5);
+      awaitingChoice = true;
+      showEvent(`<div class="event-card"><div class="etitle">${t.icon} ${t.name} — owned by ${other.name}</div>
+        <p>You're operating in ${other.name}'s zone. A service toll applies.</p>
+        <button class="choice-btn" id="payBtn"><span>Pay Toll to ${other.name}</span><span class="delta">-₹${toll.toLocaleString()}</span></button></div>`);
+      document.getElementById('payBtn').onclick = ()=>{
+        pl.credits = Math.max(0, pl.credits - toll);
+        other.credits += toll;
+        pl.log.unshift(`Paid ₹${toll.toLocaleString()} toll to ${other.name} at ${t.name}.`); resetLogView();
+        renderPlayersRow();
+        endTurn();
+      };
+      return;
+    } else {
+      awaitingChoice = true;
+      const outlook = ['🟢 Favourable','🟡 Moderate','🔴 Unfavourable'][Math.floor(Math.random()*3)];
+      showEvent(`<div class="event-card"><div class="etitle">${t.icon} ${t.name}</div>
+        <p>Purchase Price: ₹${t.price.toLocaleString()}<br>Base Income: ₹${t.income.toLocaleString()}/round<br>Ocean Outlook: ${outlook}</p>
+        <button class="choice-btn" id="buyBtn"><span>Buy</span></button>
+        <button class="choice-btn" id="skipBtn"><span>Skip</span></button></div>`);
+      document.getElementById('buyBtn').onclick = ()=>{
+        if(pl.credits >= t.price){
+          pl.credits -= t.price;
+          tileOwners[t.i] = {owner: currentPlayerIndex, level:1};
+          pl.awareness = clamp(pl.awareness+3);
+          pl.log.unshift(`Purchased ${t.name} for ₹${t.price.toLocaleString()}.`); resetLogView();
+          renderPlayersRow(); renderOwnership();
+        } else { pl.log.unshift(`Not enough credits to buy ${t.name}.`); resetLogView(); }
+        endTurn();
+      };
+      document.getElementById('skipBtn').onclick = ()=>{ pl.log.unshift(`Skipped ${t.name}.`); resetLogView(); endTurn(); };
+      return;
+    }
+  }
+  if(t.type==='pfz'){
+    awaitingChoice = true;
+    const pfzLevel = ['🟢 HIGH','🟡 MEDIUM','🔴 LOW'][Math.floor(Math.random()*3)];
+    const card = {
+      title: `${t.icon} ${t.name}`,
+      info: `INCOIS PFZ Advisory — Fish potential: ${pfzLevel}.`,
+      choices: [
+        {label:'Operate — Fish this zone', delta:{credits: pfzLevel.includes('HIGH')?2200:(pfzLevel.includes('MEDIUM')?900:200), safety:-10, awareness:8}, note:'Uses PFZ info to fish'},
+        {label:'Suspend — Conditions unclear', delta:{credits:0, safety:8, sustain:5}, note:'Play it safe'},
+      ]
+    };
+    showChoiceCard('pfz', card, endTurn);
+    return;
+  }
+  if(t.type==='card'){
+    awaitingChoice = true;
+    const card = OCEAN_CARDS[Math.floor(Math.random()*OCEAN_CARDS.length)];
+    showChoiceCard('card', card, endTurn);
+    return;
+  }
+  if(t.type==='reward'){
+    const card = REWARD_CARDS[Math.floor(Math.random()*REWARD_CARDS.length)];
+    showEvent(`<div class="event-card reward"><div class="etitle">🎁 ${card.title}</div><p>${card.info}</p><p style="color:var(--gold-300);">${deltaLabel(card.delta)}</p></div>`);
+    applyDelta(card.delta, card.title);
+    endTurn();
+    return;
+  }
+  if(t.type==='hazard'){
+    awaitingChoice = true;
+    const card = HAZARD_EVENTS[Math.floor(Math.random()*HAZARD_EVENTS.length)];
+    showChoiceCard('hazard', card, endTurn);
+    return;
+  }
+}
+
+/* ===================== END GAME ===================== */
+function endGame(){
+  const results = players.map((pl, idx)=>({
+    idx, name:pl.name, role:pl.role.name, color:pl.color,
+    score: Math.round(pl.safety*0.30 + pl.economy*0.30 + pl.awareness*0.25 + pl.sustain*0.15),
+    credits: pl.credits, assets: Object.values(tileOwners).filter(o=>o.owner===idx).length,
+    safety: Math.round(pl.safety), economy: Math.round(pl.economy), awareness: Math.round(pl.awareness), sustain: Math.round(pl.sustain)
+  })).sort((a,b)=>b.score-a.score);
+
+  document.getElementById('leaderboard').innerHTML = results.map((r,rank)=>`
+    <div class="leader-row ${rank===0?'win':''}">
+      <div>
+        <div class="lname">${rank===0?'🏆 ':''}${r.name} — ${r.role}</div>
+        <div class="lsub">₹${r.credits.toLocaleString()} · ${r.assets} assets · S${r.safety} E${r.economy} A${r.awareness} U${r.sustain}</div>
+      </div>
+      <div class="lscore">${r.score}/100</div>
+    </div>`).join('');
+
+  document.getElementById('endScreen').classList.add('active');
+}
+
+document.getElementById('restartBtn').onclick = ()=>{
+  document.getElementById('endScreen').classList.remove('active');
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('titleScreen').style.display = 'flex';
+  document.getElementById('stepRoles').classList.remove('active');
+  document.getElementById('stepCount').classList.add('active');
+  document.querySelectorAll('.count-btn').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('toRolesBtn').disabled = true;
+  document.getElementById('startBtn').disabled = true;
+  numPlayers = 0; playerRoleChoice = [];
+};
+</script>
+</body>
+</html>
