@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ocean Decision — SEAWISE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #010810; }
+  #root { width: 100%; height: 100vh; }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.383.0?external=react"
+  }
+}
+</script>
+
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root">
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#87AAC9;font-family:sans-serif;font-size:14px;">
+    Loading SEAWISE…
+  </div>
+</div>
+
+<script type="text/babel" data-type="module">
+import React, { useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  Anchor, Wind, Fish, AlertTriangle, Compass, Shield, Fuel, TrendingUp,
+  Sunrise, ChevronRight, ArrowLeft, Info, RotateCcw, Waves, Sparkles,
+  Gauge, Home, ShoppingBag, BarChart3, User, Settings as SettingsIcon,
+  Star, Award, MapPin, Navigation2, Lock, Volume2, Music2, Vibrate,
+  Globe, LogOut, X, Check, Zap, Wrench, Target, Clock, Users, Ship,
+  Radio, Package, CloudRain,
+} from "lucide-react";
+
+/* ============================================================
+   SEAWISE — Decide. Sail. Survive.
+   ============================================================ */
+
+const T = {
+  bg: "#03101F",
+  bgDeep: "#010810",
+  panel: "rgba(15,42,70,0.55)",
+  panelSolid: "#0E2A46",
+  panelLight: "#153A5C",
+  card: "rgba(9,26,46,0.62)",
+  cardSolid: "#0A1E34",
+  line: "rgba(56,214,201,0.14)",
+  lineStrong: "rgba(56,214,201,0.34)",
+  green: "#37D6A0",
+  greenDim: "#155C48",
+  orange: "#F4A24A",
+  red: "#FF6B6B",
+  blue: "#57B8E8",
+  cyan: "#22E5C9",
+  cyanDim: "#0B564C",
+  gold: "#FFCE6E",
+  purple: "#A98CFF",
+  ink: "#EAF6FF",
+  inkMuted: "#87AAC9",
+  inkFaint: "#4C6D8C",
+};
+
+const OUTCOME_META = {
+  safe: { label: "SAFE DECISION", color: T.green, glow: "rgba(55,214,160,0.14)" },
+  moderate: { label: "MODERATE DECISION", color: T.orange, glow: "rgba(244,162,74,0.14)" },
+  risky: { label: "RISKY DECISION", color: T.orange, glow: "rgba(255,107,107,0.12)" },
+  dangerous: { label: "DANGEROUS DECISION", color: T.red, glow: "rgba(255,107,107,0.18)" },
+};
+
+const BTN_COLORS = [T.green, T.orange, T.red];
+
+/* ----------------------- Roles ----------------------- */
+const ROLES = [
+  { id: "fisherman", name: "Fisherman", desc: "Catch fish, earn income and stay safe.", icon: Fish },
+  { id: "captain", name: "Boat Captain", desc: "Navigate safely and reach destinations.", icon: Compass },
+  { id: "tourist", name: "Tourist Boat Operator", desc: "Take tourists safely and earn profit.", icon: Anchor },
+  { id: "resident", name: "Coastal Resident", desc: "Stay informed and keep your community safe.", icon: Users },
+];
+
+/* ============================================================
+   FISHERMAN DATA
+   ============================================================ */
+
+const FISHERMAN_SCENARIOS = [
+  {
+    id: "s1", time: "06:00 AM", title: "Calm Morning",
+    conditions: { waves: "0.8 m — Calm", wind: "12 km/h — Light", weather: "Clear", pfz: "10 km, Good", warning: "None" },
+    prompt: "The sea is calm and a fishing zone has been spotted offshore. What will you do?",
+    decisions: [
+      { id: "pfz", label: "Go to the PFZ", icon: Fish, effects: { money: 1800, safety: -5, fuel: -20, catch: 30, knowledge: 5 }, outcome: "moderate",
+        result: "You made good time to the fishing zone. The calm sea kept the trip smooth, though the extra distance ate into your fuel.",
+        insight: "Calm waves and light wind are ideal conditions for reaching a Potential Fishing Zone (PFZ) — the opportunity cost is lowest right now." },
+      { id: "near", label: "Fish Near Shore", icon: Anchor, effects: { money: 900, safety: 5, fuel: -8, catch: 15, knowledge: 10 }, outcome: "safe",
+        result: "A modest, steady catch close to shore. Low risk, low fuel use.",
+        insight: "Fishing near shore is nearly always the lower-risk option — useful for conserving fuel early in the day." },
+      { id: "harbour", label: "Stay at Harbour", icon: Shield, effects: { money: -150, safety: 10, fuel: 0, catch: 0, knowledge: 5 }, outcome: "moderate",
+        result: "You waited it out. Nothing gained, nothing lost — but good conditions went unused.",
+        insight: "With calm seas and no alerts, staying at harbour is safe, but overly cautious." },
+    ],
+  },
+  {
+    id: "s2", time: "08:30 AM", title: "Freshening Wind",
+    conditions: { waves: "1.6 m — Moderate", wind: "27 km/h — Strong", weather: "Overcast", pfz: "6 km, Good", warning: "None" },
+    prompt: "Wind is picking up faster than expected. The fishing zone is still active. What now?",
+    decisions: [
+      { id: "continue", label: "Continue to PFZ", icon: Fish, effects: { money: 1600, safety: -20, fuel: -25, catch: 25, knowledge: 0 }, outcome: "risky",
+        result: "You pushed on. The catch was good, but handling the boat in rising wind cost fuel and rattled your safety margin.",
+        insight: "Strong wind raises boat-handling difficulty and fuel burn even before waves get dangerous." },
+      { id: "shore", label: "Move Closer to Shore", icon: Compass, effects: { money: 700, safety: 5, fuel: -10, catch: 12, knowledge: 10 }, outcome: "safe",
+        result: "You traded some catch for calmer water near the coast. A sensible adjustment.",
+        insight: "Moving toward shore when wind freshens reduces risk without abandoning the trip." },
+      { id: "return", label: "Return to Harbour", icon: Anchor, effects: { money: -100, safety: 15, fuel: -5, catch: 0, knowledge: 15 }, outcome: "moderate",
+        result: "You played it very safe — but conditions hadn't yet crossed into dangerous territory.",
+        insight: "Returning at the first sign of wind is safe, but this was an early, cautious call." },
+    ],
+  },
+  {
+    id: "s3", time: "12:15 PM", title: "PFZ vs. Rough Sea",
+    conditions: { waves: "2.4 m — High", wind: "34 km/h — Strong", weather: "Squally", pfz: "15 km, Excellent", warning: "Strong Wind Advisory" },
+    prompt: "An excellent fishing zone is active, but a rough-sea warning has just been issued.",
+    decisions: [
+      { id: "pfz", label: "Go to PFZ", icon: Fish, effects: { money: 2200, safety: -35, fuel: -30, catch: 40, knowledge: 0 }, outcome: "dangerous",
+        result: "The catch was excellent — but the sea fought you the whole way. Safety took a serious hit.",
+        insight: "An active warning combined with high waves compounds risk — even an excellent PFZ isn't worth it." },
+      { id: "nearby", label: "Fish Near Shore", icon: Compass, effects: { money: 1000, safety: -5, fuel: -12, catch: 18, knowledge: 10 }, outcome: "moderate",
+        result: "A reasonable middle path — you kept fishing but stayed out of the roughest water.",
+        insight: "When a warning is active, less-exposed water lets you keep working while limiting exposure." },
+      { id: "return", label: "Return to Harbour", icon: Anchor, effects: { money: -200, safety: 10, fuel: -5, catch: 0, knowledge: 20 }, outcome: "safe",
+        result: "You turned back. The trip cost money today, but the boat and crew are safe.",
+        insight: "A rough-sea warning plus high waves is exactly what advisories are built for — returning is the textbook call." },
+    ],
+  },
+  {
+    id: "s4", time: "02:45 PM", title: "Sudden Alert",
+    conditions: { waves: "2.6 m — High", wind: "36 km/h — Strong", weather: "Deteriorating", pfz: "—", warning: "Conditions Worsening" },
+    prompt: "You're already offshore when a new alert comes in: conditions are deteriorating fast.",
+    decisions: [
+      { id: "continue", label: "Continue Fishing", icon: Fish, effects: { money: 800, safety: -30, fuel: -20, catch: 15, knowledge: 0 }, outcome: "dangerous",
+        result: "You kept the nets out as the sea worsened. A small catch gain, at real cost to safety.",
+        insight: "Once an alert fires while offshore, every extra minute trades safety for a shrinking reward." },
+      { id: "shelter", label: "Move to Shelter", icon: Compass, effects: { money: 300, safety: 10, fuel: -15, catch: 5, knowledge: 15 }, outcome: "safe",
+        result: "You found calmer water close to the coastline and rode out the worst of it.",
+        insight: "Sheltered water is often closer than the harbour and the fastest way to reduce risk." },
+      { id: "return", label: "Return to Harbour", icon: Anchor, effects: { money: 0, safety: 15, fuel: -10, catch: 0, knowledge: 20 }, outcome: "safe",
+        result: "You headed straight back. No new catch, but no new risk either.",
+        insight: "A deteriorating-conditions alert while offshore is a clear signal to return directly." },
+    ],
+  },
+];
+
+const FISHERMAN_EVENT = {
+  title: "Engine Temperature High!", desc: "Engine is overheating. What will you do?",
+  decisions: [
+    { id: "continue", label: "Continue", icon: Zap, effects: { money: 3500, safety: -20, fuel: -25, catch: 0, knowledge: 5 }, outcome: "risky",
+      result: "You kept going despite the warning light. Risky, but it paid off financially this time.",
+      insight: "Ignoring mechanical warnings can turn a manageable problem into a real emergency at sea." },
+    { id: "reduce", label: "Reduce Speed", icon: Gauge, effects: { money: 1200, safety: 5, fuel: -10, catch: 0, knowledge: 10 }, outcome: "moderate",
+      result: "You eased off the throttle and let the engine cool while continuing cautiously.",
+      insight: "Reducing load often resolves overheating without ending the trip entirely." },
+    { id: "return", label: "Return to Shore", icon: Anchor, effects: { money: -300, safety: 15, fuel: -5, catch: 0, knowledge: 15 }, outcome: "safe",
+      result: "You headed back immediately to get the engine checked.",
+      insight: "A mechanical fault early in a trip is best resolved on land, not tested at sea." },
+  ],
+};
+
+const FISHERMAN_ADVISORY = {
+  message: "Strong winds expected within the next 60 minutes. Coastal authorities recommend caution.",
+};
+
+const FISHERMAN_DAY_FLOW = [
+  { type: "decision", scenario: FISHERMAN_SCENARIOS[0] },
+  { type: "decision", scenario: FISHERMAN_SCENARIOS[1] },
+  { type: "event" },
+  { type: "advisory" },
+  { type: "decision", scenario: FISHERMAN_SCENARIOS[2] },
+  { type: "decision", scenario: FISHERMAN_SCENARIOS[3] },
+];
+
+const FISHERMAN_START = { money: 5000, safety: 100, fuel: 100, catch: 0, xp: 0, reputation: 75 };
+
+/* ============================================================
+   BOAT CAPTAIN DATA
+   ============================================================ */
+
+const CAPTAIN_SCENARIOS = [
+  {
+    id: "c1", time: "05:45 AM", title: "Morning Departure",
+    conditions: { waves: "0.9 m — Calm", wind: "11 km/h — Light", weather: "Clear", pfz: "Direct Route, Clear", warning: "None" },
+    prompt: "Passengers are boarding for the mainland crossing. Which route will you take?",
+    decisions: [
+      { id: "direct", label: "Take Direct Route", icon: Navigation2, effects: { money: 1400, safety: -5, fuel: -18, catch: 1, knowledge: 5 }, outcome: "moderate",
+        result: "You made good time on the direct route. Passengers arrived early, though the extra speed burned more fuel than planned.",
+        insight: "Calm seas make the direct route worth the extra fuel — the time saved outweighs the risk today." },
+      { id: "coastal", label: "Take Coastal Route", icon: Compass, effects: { money: 850, safety: 5, fuel: -10, catch: 1, knowledge: 10 }, outcome: "safe",
+        result: "A longer but steadier crossing along the coastline kept everyone comfortable.",
+        insight: "The coastal route trades time for calmer water — a reliable choice when there's no urgency." },
+      { id: "wait", label: "Wait for Better Conditions", icon: Anchor, effects: { money: -150, safety: 10, fuel: 0, catch: 0, knowledge: 5 }, outcome: "moderate",
+        result: "You held the boat at the dock a little longer. Passengers grew impatient, but nothing was risked.",
+        insight: "With calm conditions already, waiting further is overly cautious and costs you the trip." },
+    ],
+  },
+  {
+    id: "c2", time: "08:15 AM", title: "Freshening Wind",
+    conditions: { waves: "1.7 m — Moderate", wind: "29 km/h — Strong", weather: "Overcast", pfz: "Direct Route, Delays Likely", warning: "None" },
+    prompt: "Wind is rising faster than forecast, mid-crossing. How do you proceed?",
+    decisions: [
+      { id: "continue", label: "Push Through", icon: Zap, effects: { money: 1300, safety: -22, fuel: -22, catch: 1, knowledge: 0 }, outcome: "risky",
+        result: "You held course through the chop. You reached port on schedule, but the crossing shook the passengers and the boat.",
+        insight: "Pushing through freshening wind saves time but stacks risk onto an already strong-wind trip." },
+      { id: "divert", label: "Divert to Nearest Shelter", icon: Compass, effects: { money: 600, safety: 8, fuel: -12, catch: 0, knowledge: 10 }, outcome: "safe",
+        result: "You pulled into a sheltered inlet to let the wind ease before continuing.",
+        insight: "Diverting to shelter when wind rises is a standard captain's call — it costs time, not safety." },
+      { id: "return", label: "Turn Back to Port", icon: Anchor, effects: { money: -100, safety: 15, fuel: -6, catch: 0, knowledge: 15 }, outcome: "moderate",
+        result: "You returned to the origin port. A cautious call, though the wind hadn't yet crossed into dangerous territory.",
+        insight: "Turning back this early is safe, but conditions were still manageable — a more moderate response might have sufficed." },
+    ],
+  },
+  {
+    id: "c3", time: "11:30 AM", title: "Storm Surge Warning",
+    conditions: { waves: "2.6 m — High", wind: "38 km/h — Strong", weather: "Squally", pfz: "Route Closed Ahead", warning: "Storm Surge Warning" },
+    prompt: "A storm surge warning has just been issued for the route ahead, with passengers still aboard.",
+    decisions: [
+      { id: "continue", label: "Continue to Destination", icon: Zap, effects: { money: 1800, safety: -35, fuel: -28, catch: 1, knowledge: 0 }, outcome: "dangerous",
+        result: "You pressed on to complete the crossing. You arrived, but the passage badly frightened the passengers and strained the hull.",
+        insight: "A storm surge warning combined with high waves is a hard stop signal — no schedule is worth this risk." },
+      { id: "shelter", label: "Anchor at Nearest Shelter", icon: Compass, effects: { money: 400, safety: 5, fuel: -10, catch: 0, knowledge: 15 }, outcome: "moderate",
+        result: "You held position in a sheltered cove until the surge warning passed.",
+        insight: "Riding out a surge warning at anchor protects the boat and passengers without abandoning the trip." },
+      { id: "return", label: "Return to Origin Port", icon: Anchor, effects: { money: -250, safety: 15, fuel: -8, catch: 0, knowledge: 20 }, outcome: "safe",
+        result: "You turned back for the origin port. The trip was cancelled, but everyone stayed safe.",
+        insight: "When a storm surge warning is active, returning to the nearest safe port is the textbook response." },
+    ],
+  },
+  {
+    id: "c4", time: "02:00 PM", title: "Engine Trouble Offshore",
+    conditions: { waves: "2.2 m — High", wind: "31 km/h — Strong", weather: "Deteriorating", pfz: "—", warning: "Mechanical Alert" },
+    prompt: "The engine is losing power mid-crossing as conditions worsen. What's your call?",
+    decisions: [
+      { id: "continue", label: "Continue on Reduced Power", icon: Gauge, effects: { money: 700, safety: -28, fuel: -15, catch: 0, knowledge: 0 }, outcome: "dangerous",
+        result: "You limped toward the destination on reduced power. It worked, but you were exposed the whole way.",
+        insight: "Continuing on a failing engine into worsening seas risks total loss of power at the worst moment." },
+      { id: "distress", label: "Call for Assistance & Shelter", icon: Radio, effects: { money: 200, safety: 12, fuel: -8, catch: 0, knowledge: 15 }, outcome: "safe",
+        result: "You radioed for assistance and held in the nearest sheltered water until help arrived.",
+        insight: "Calling for assistance early, before the engine fully fails, is the safest response to mechanical trouble at sea." },
+      { id: "return", label: "Attempt Slow Return to Port", icon: Anchor, effects: { money: 0, safety: 5, fuel: -10, catch: 0, knowledge: 10 }, outcome: "moderate",
+        result: "You nursed the boat back toward port at low speed, watching the gauges the whole way.",
+        insight: "A slow return can work if the port is close, but it's a gamble compared to calling for help." },
+    ],
+  },
+];
+
+const CAPTAIN_EVENT = {
+  title: "Navigation System Failure!", desc: "Your GPS and chart plotter have gone dark mid-route.",
+  decisions: [
+    { id: "continue", label: "Navigate by Landmarks", icon: Compass, effects: { money: 900, safety: -15, fuel: -10, catch: 0, knowledge: 5 }, outcome: "risky",
+      result: "You navigated by sight and memory. It worked, but the margin for error was thin.",
+      insight: "Manual navigation is workable in familiar waters, but it raises the chance of a costly mistake." },
+    { id: "backup", label: "Switch to Backup Compass", icon: Navigation2, effects: { money: 500, safety: 5, fuel: -6, catch: 0, knowledge: 10 }, outcome: "safe",
+      result: "You switched to the backup compass and charts, slowing down but staying on course safely.",
+      insight: "A backup compass is exactly the kind of redundancy that turns an emergency into a minor delay." },
+    { id: "return", label: "Return to Nearest Port", icon: Anchor, effects: { money: -150, safety: 15, fuel: -8, catch: 0, knowledge: 15 }, outcome: "safe",
+      result: "You headed for the nearest port to get the system repaired before continuing.",
+      insight: "Losing navigation equipment offshore is reason enough to end the trip early and get it fixed." },
+  ],
+};
+
+const CAPTAIN_ADVISORY = {
+  message: "A strong current advisory has been issued for the shipping lane ahead. Reduced visibility is also expected.",
+};
+
+const CAPTAIN_DAY_FLOW = [
+  { type: "decision", scenario: CAPTAIN_SCENARIOS[0] },
+  { type: "decision", scenario: CAPTAIN_SCENARIOS[1] },
+  { type: "event" },
+  { type: "advisory" },
+  { type: "decision", scenario: CAPTAIN_SCENARIOS[2] },
+  { type: "decision", scenario: CAPTAIN_SCENARIOS[3] },
+];
+
+const CAPTAIN_START = { money: 4000, safety: 100, fuel: 100, catch: 0, xp: 0, reputation: 75 };
+
+/* ============================================================
+   TOURIST BOAT OPERATOR DATA
+   ============================================================ */
+
+const TOURIST_SCENARIOS = [
+  {
+    id: "t1", time: "07:30 AM", title: "Morning Booking",
+    conditions: { waves: "0.9 m — Calm", wind: "13 km/h — Light", weather: "Clear", pfz: "Reef Tour, Good Visibility", warning: "None" },
+    prompt: "A group of tourists has booked the reef tour. Conditions look great — how do you run it?",
+    decisions: [
+      { id: "scenic", label: "Take the Scenic Reef Route", icon: MapPin, effects: { money: 2000, safety: -5, fuel: -18, catch: 6, knowledge: 5 }, outcome: "moderate",
+        result: "The tour went further out to the reef for the best views. Tourists loved it, and the extra distance was worth it in calm water.",
+        insight: "Calm, clear conditions are exactly when the scenic route pays off with minimal added risk." },
+      { id: "safe", label: "Take the Sheltered Route", icon: Compass, effects: { money: 1100, safety: 5, fuel: -10, catch: 6, knowledge: 10 }, outcome: "safe",
+        result: "A shorter, calmer route still gave tourists a great morning on the water.",
+        insight: "The sheltered route is a dependable choice that still delivers a good tourist experience." },
+      { id: "cancel", label: "Cancel & Refund", icon: Anchor, effects: { money: -300, safety: 10, fuel: 0, catch: 0, knowledge: 5 }, outcome: "moderate",
+        result: "You cancelled despite the good weather. Tourists were refunded but disappointed.",
+        insight: "Cancelling in genuinely calm conditions costs income and satisfaction for no safety benefit." },
+    ],
+  },
+  {
+    id: "t2", time: "10:00 AM", title: "A Request for More",
+    conditions: { waves: "1.5 m — Moderate", wind: "24 km/h — Strong", weather: "Partly Cloudy", pfz: "Distant Island, Weather Uncertain", warning: "None" },
+    prompt: "Tourists are asking to extend the trip to a distant island, but wind is picking up.",
+    decisions: [
+      { id: "extend", label: "Agree & Head Further Out", icon: Zap, effects: { money: 2500, safety: -20, fuel: -25, catch: 8, knowledge: 0 }, outcome: "risky",
+        result: "You extended the trip. Tourists got their photos, but the return leg was rougher than expected.",
+        insight: "Saying yes to a longer route in rising wind trades passenger safety for a happier review." },
+      { id: "compromise", label: "Offer a Closer Alternative", icon: Compass, effects: { money: 1400, safety: 5, fuel: -12, catch: 7, knowledge: 10 }, outcome: "safe",
+        result: "You suggested a nearer spot with similar views. Most tourists were satisfied with the compromise.",
+        insight: "Redirecting to a safer, closer option usually keeps both safety and satisfaction intact." },
+      { id: "decline", label: "Decline & Continue Planned Route", icon: Anchor, effects: { money: 900, safety: 10, fuel: -10, catch: 5, knowledge: 10 }, outcome: "moderate",
+        result: "You stuck to the original plan. A few tourists were mildly disappointed, but the tour ran smoothly.",
+        insight: "Sticking to the planned route keeps things predictable, even if it doesn't fully please everyone." },
+    ],
+  },
+  {
+    id: "t3", time: "12:30 PM", title: "Weather Warning Mid-Tour",
+    conditions: { waves: "2.3 m — High", wind: "33 km/h — Strong", weather: "Squally", pfz: "Tour Zone, Rough Water", warning: "Strong Wind Advisory" },
+    prompt: "A wind advisory is issued while tourists are still aboard, mid-tour.",
+    decisions: [
+      { id: "continue", label: "Continue the Tour", icon: Fish, effects: { money: 1200, safety: -30, fuel: -20, catch: 5, knowledge: 0 }, outcome: "dangerous",
+        result: "You kept the tour running through the advisory. Some tourists were visibly frightened by the rough water.",
+        insight: "Continuing a tour under an active wind advisory puts paying guests at real, avoidable risk." },
+      { id: "shelter", label: "Head to Calmer Water", icon: Compass, effects: { money: 600, safety: 0, fuel: -12, catch: 3, knowledge: 15 }, outcome: "moderate",
+        result: "You moved the group to more sheltered water to wait out the advisory.",
+        insight: "Repositioning to calmer water lets the tour continue in a lower-risk form during an advisory." },
+      { id: "return", label: "End the Tour Early", icon: Anchor, effects: { money: -200, safety: 15, fuel: -8, catch: 0, knowledge: 20 }, outcome: "safe",
+        result: "You cut the tour short and returned to the dock. Some refunds were issued, but everyone was safe.",
+        insight: "Ending early under an active advisory is the responsible call, even though it costs revenue." },
+    ],
+  },
+  {
+    id: "t4", time: "03:15 PM", title: "Engine Trouble With Guests Aboard",
+    conditions: { waves: "1.9 m — Moderate", wind: "27 km/h — Strong", weather: "Deteriorating", pfz: "—", warning: "Mechanical Alert" },
+    prompt: "The engine starts sputtering with tourists still aboard as conditions worsen.",
+    decisions: [
+      { id: "continue", label: "Try to Finish the Tour", icon: Zap, effects: { money: 700, safety: -25, fuel: -15, catch: 2, knowledge: 0 }, outcome: "dangerous",
+        result: "You tried to complete the tour despite the engine trouble. It held together, but it was a nervous ride back.",
+        insight: "Running a failing engine through a full tour with guests aboard is not a risk worth taking." },
+      { id: "reduce", label: "Slow Down & Head Back Carefully", icon: Gauge, effects: { money: 300, safety: 10, fuel: -8, catch: 0, knowledge: 15 }, outcome: "safe",
+        result: "You reduced speed and eased the boat back to the dock without further strain.",
+        insight: "Cutting speed at the first sign of engine trouble is usually enough to get everyone back safely." },
+      { id: "assist", label: "Call for Assistance", icon: Radio, effects: { money: -100, safety: 15, fuel: -5, catch: 0, knowledge: 20 }, outcome: "safe",
+        result: "You called ahead for assistance and were met near the dock. Guests appreciated the caution.",
+        insight: "Calling for assistance early keeps a mechanical problem from turning into an emergency." },
+    ],
+  },
+];
+
+const TOURIST_EVENT = {
+  title: "A Tourist Feels Seasick!", desc: "One of your guests is seasick and asking to head back.",
+  decisions: [
+    { id: "continue", label: "Continue the Tour", icon: Zap, effects: { money: 800, safety: 0, fuel: -10, catch: 1, knowledge: 0 }, outcome: "risky",
+      result: "You continued as planned. Most guests were fine, but the seasick tourist had a rough afternoon.",
+      insight: "Ignoring a guest's discomfort can hurt satisfaction and reviews even if nothing goes physically wrong." },
+    { id: "pause", label: "Pause & Offer Assistance", icon: Shield, effects: { money: 200, safety: 5, fuel: -5, catch: 1, knowledge: 10 }, outcome: "moderate",
+      result: "You slowed down, offered water and shade, and let the tourist recover before continuing.",
+      insight: "A short pause to help an uncomfortable guest often resolves the issue without ending the trip." },
+    { id: "return", label: "End the Tour Early", icon: Anchor, effects: { money: -150, safety: 10, fuel: -5, catch: 0, knowledge: 15 }, outcome: "safe",
+      result: "You headed back early so the tourist could recover on solid ground.",
+      insight: "Prioritizing a guest's wellbeing over the schedule is usually the right call for customer trust." },
+  ],
+};
+
+const TOURIST_ADVISORY = {
+  message: "A squall is expected along the tour route within the hour. Guest safety should be the priority.",
+};
+
+const TOURIST_DAY_FLOW = [
+  { type: "decision", scenario: TOURIST_SCENARIOS[0] },
+  { type: "decision", scenario: TOURIST_SCENARIOS[1] },
+  { type: "event" },
+  { type: "advisory" },
+  { type: "decision", scenario: TOURIST_SCENARIOS[2] },
+  { type: "decision", scenario: TOURIST_SCENARIOS[3] },
+];
+
+const TOURIST_START = { money: 3500, safety: 100, fuel: 100, catch: 0, xp: 0, reputation: 75 };
+
+/* ============================================================
+   COASTAL RESIDENT DATA
+   ============================================================ */
+
+const RESIDENT_SCENARIOS = [
+  {
+    id: "r1", time: "05:00 AM", title: "Cyclone Watch Issued",
+    conditions: { waves: "0.8 m — Calm", wind: "18 km/h — Light", weather: "Clear, Skies Darkening", pfz: "Village Zone, Watch Issued", warning: "None" },
+    prompt: "A cyclone watch has been issued for your coast, though conditions are still calm. What do you do first?",
+    decisions: [
+      { id: "prepare", label: "Begin Preparing Supplies", icon: ShoppingBag, effects: { money: -300, safety: 10, fuel: 15, catch: 5, knowledge: 10 }, outcome: "safe",
+        result: "You stocked water, food, and essentials early, before the rush. Your household was in good shape.",
+        insight: "Acting on a watch, before it becomes a warning, is the cheapest and safest time to prepare." },
+      { id: "wait", label: "Wait for Further Updates", icon: Clock, effects: { money: 0, safety: -5, fuel: 0, catch: 0, knowledge: 5 }, outcome: "moderate",
+        result: "You held off preparing, waiting for a clearer picture. Time that could've been used was lost.",
+        insight: "Waiting through a watch isn't dangerous yet, but it narrows your options if the storm strengthens." },
+      { id: "ignore", label: "Continue as Normal", icon: Zap, effects: { money: 200, safety: -15, fuel: -5, catch: -5, knowledge: 0 }, outcome: "risky",
+        result: "You went about your day as usual. A cyclone watch, even an early one, is not something to ignore.",
+        insight: "Treating an early watch as nothing can leave you scrambling if it upgrades to a warning." },
+    ],
+  },
+  {
+    id: "r2", time: "10:00 AM", title: "Warning Upgraded",
+    conditions: { waves: "1.4 m — Moderate", wind: "45 km/h — Strong", weather: "Overcast, Rain Beginning", pfz: "Village Zone, Warning Active", warning: "Cyclone Warning" },
+    prompt: "The watch has been upgraded to a full cyclone warning. Rain has started.",
+    decisions: [
+      { id: "secure", label: "Secure Property & Stay", icon: Wrench, effects: { money: -200, safety: -10, fuel: 5, catch: 5, knowledge: 10 }, outcome: "risky",
+        result: "You reinforced doors and windows and decided to stay home. It held, but the warning called for more caution.",
+        insight: "Securing property is useful, but a full cyclone warning usually calls for leaving, not just reinforcing." },
+      { id: "shelter", label: "Move to Community Shelter", icon: Home, effects: { money: -100, safety: 15, fuel: -5, catch: 10, knowledge: 15 }, outcome: "safe",
+        result: "You gathered essentials and moved to the community shelter with your family.",
+        insight: "Moving to a designated shelter once a warning is active is exactly what the system is built for." },
+      { id: "help", label: "Help Neighbours Evacuate", icon: Users, effects: { money: -150, safety: 5, fuel: -10, catch: 15, knowledge: 15 }, outcome: "moderate",
+        result: "You helped elderly neighbours pack and evacuate before heading to shelter yourself.",
+        insight: "Helping others evacuate builds community resilience, though it costs you time and some personal safety margin." },
+    ],
+  },
+  {
+    id: "r3", time: "01:00 PM", title: "Storm Surge Alert",
+    conditions: { waves: "2.5 m — High", wind: "60 km/h — Strong", weather: "Severe", pfz: "Low-Lying Zone, Evacuate", warning: "Storm Surge Alert" },
+    prompt: "A storm surge alert has been issued for low-lying areas, including yours.",
+    decisions: [
+      { id: "stay", label: "Stay & Monitor from Home", icon: Home, effects: { money: 100, safety: -35, fuel: -10, catch: -10, knowledge: 0 }, outcome: "dangerous",
+        result: "You chose to stay and watch the storm from home. The surge alert made this a serious gamble.",
+        insight: "A storm surge alert in a low-lying area is one of the clearest evacuate signals there is." },
+      { id: "evacuate", label: "Evacuate Immediately", icon: Anchor, effects: { money: -250, safety: 20, fuel: -10, catch: 10, knowledge: 20 }, outcome: "safe",
+        result: "You evacuated to higher ground without delay, leaving belongings behind.",
+        insight: "Evacuating immediately when a surge alert hits your zone is the response that saves lives." },
+      { id: "delay", label: "Gather Belongings First", icon: ShoppingBag, effects: { money: 50, safety: -15, fuel: -8, catch: 0, knowledge: 5 }, outcome: "risky",
+        result: "You spent time gathering valuables before leaving. You made it out, but later than you should have.",
+        insight: "Delaying evacuation to gather belongings eats into the safety margin a surge alert gives you." },
+    ],
+  },
+  {
+    id: "r4", time: "04:00 PM", title: "Power Outage & Flooding",
+    conditions: { waves: "2.1 m — High", wind: "50 km/h — Strong", weather: "Flooding Reported", pfz: "Shelter Zone, Overcrowded", warning: "Flood Warning" },
+    prompt: "Power has gone out and flooding is reported near the shelter. What now?",
+    decisions: [
+      { id: "risk", label: "Return Home to Check Property", icon: Zap, effects: { money: 100, safety: -30, fuel: -10, catch: -10, knowledge: 0 }, outcome: "dangerous",
+        result: "You left the shelter to check on your home during active flooding. It was a dangerous trip.",
+        insight: "Leaving a safe shelter during a flood warning to check property risks far more than it protects." },
+      { id: "stay", label: "Stay at Shelter & Assist Others", icon: Users, effects: { money: -50, safety: 10, fuel: -5, catch: 15, knowledge: 15 }, outcome: "safe",
+        result: "You stayed at the shelter and helped organize supplies for other families.",
+        insight: "Staying put and helping others during active flooding keeps everyone, including you, safer." },
+      { id: "wait", label: "Wait Quietly for Updates", icon: Clock, effects: { money: 0, safety: 5, fuel: 0, catch: 0, knowledge: 10 }, outcome: "moderate",
+        result: "You stayed in place and waited for official updates rather than acting on rumours.",
+        insight: "Waiting for official updates during a flood warning is safe, though helping others would do more good." },
+    ],
+  },
+];
+
+const RESIDENT_EVENT = {
+  title: "Neighbour Needs Help!", desc: "An elderly neighbour is stuck at home as the storm intensifies.",
+  decisions: [
+    { id: "ignore", label: "Focus on Your Own Family", icon: Home, effects: { money: 0, safety: 5, fuel: 0, catch: -10, knowledge: 0 }, outcome: "risky",
+      result: "You focused only on your own household. Your neighbour managed, but community trust took a hit.",
+      insight: "Ignoring a neighbour in need during a storm is safe for you, but it weakens the community's resilience." },
+    { id: "assist", label: "Go Help Them Evacuate", icon: Users, effects: { money: -100, safety: -10, fuel: -5, catch: 20, knowledge: 15 }, outcome: "moderate",
+      result: "You went out to help your neighbour reach the shelter safely, at some personal risk.",
+      insight: "Helping a neighbour evacuate is valuable for the community but does carry real personal risk in a storm." },
+    { id: "call", label: "Call Emergency Services", icon: Radio, effects: { money: 0, safety: 10, fuel: 0, catch: 10, knowledge: 10 }, outcome: "safe",
+      result: "You called emergency services, who reached your neighbour safely.",
+      insight: "Calling trained responders is often the safest way to help someone without adding risk to yourself." },
+  ],
+};
+
+const RESIDENT_ADVISORY = {
+  message: "Cyclone warning upgraded for coastal villages. Evacuation to designated shelters is now advised.",
+};
+
+const RESIDENT_DAY_FLOW = [
+  { type: "decision", scenario: RESIDENT_SCENARIOS[0] },
+  { type: "decision", scenario: RESIDENT_SCENARIOS[1] },
+  { type: "event" },
+  { type: "advisory" },
+  { type: "decision", scenario: RESIDENT_SCENARIOS[2] },
+  { type: "decision", scenario: RESIDENT_SCENARIOS[3] },
+];
+
+const RESIDENT_START = { money: 2000, safety: 100, fuel: 100, catch: 0, xp: 0, reputation: 75 };
+
+/* ============================================================
+   ROLE CONFIGS
+   ============================================================ */
+
+const ROLE_CONFIGS = {
+  fisherman: {
+    location: "Visakhapatnam Coast",
+    departureTime: "05:30 AM",
+    startState: FISHERMAN_START,
+    scenarios: FISHERMAN_SCENARIOS,
+    randomEvent: FISHERMAN_EVENT,
+    advisoryPop: FISHERMAN_ADVISORY,
+    dayFlow: FISHERMAN_DAY_FLOW,
+    labels: {
+      money: { label: "Money", icon: TrendingUp },
+      fuel: { label: "Fuel", icon: Fuel },
+      catch: { label: "Catch", icon: Fish, unit: "kg", format: (v) => `${v} kg` },
+      reputation: { label: "Reputation", icon: Star },
+    },
+    conditions: {
+      waves: { label: "Waves", icon: Waves },
+      wind: { label: "Wind", icon: Wind },
+      weather: { label: "Weather", icon: Sunrise },
+      pfz: { label: "PFZ", icon: Fish },
+    },
+    mapBaseLabel: "Harbour",
+    upgrade: { title: "BOAT UPGRADE", desc: "Increases starting fuel capacity and safety headroom for every future trip.", icon: Ship },
+    fuelBonusItem: { id: "fuelTank", amount: 15 },
+    challengeIncome: 2000,
+    shopItems: [
+      { id: "fuelTank", name: "Extra Fuel Tank", desc: "+15 starting fuel each day", price: 2000, icon: Fuel },
+      { id: "gps", name: "GPS Device", desc: "Reveals PFZ distance more precisely", price: 2500, icon: MapPin },
+      { id: "safetyKit", name: "Safety Kit", desc: "+10 starting safety each day", price: 1500, icon: Shield },
+    ],
+    achievements: [
+      { title: "Safe Sailor", desc: "Complete 5 days with Safety > 80", icon: Shield, type: "days", target: 5 },
+      { title: "Smart Fisher", desc: "Make 10 good decisions", icon: Fish, type: "good", target: 10 },
+      { title: "Storm Master", desc: "Survive a storm event", icon: Award, type: "flag", target: 1 },
+    ],
+  },
+
+  captain: {
+    location: "Port Blair Route",
+    departureTime: "05:45 AM",
+    startState: CAPTAIN_START,
+    scenarios: CAPTAIN_SCENARIOS,
+    randomEvent: CAPTAIN_EVENT,
+    advisoryPop: CAPTAIN_ADVISORY,
+    dayFlow: CAPTAIN_DAY_FLOW,
+    labels: {
+      money: { label: "Income", icon: TrendingUp },
+      fuel: { label: "Fuel", icon: Fuel },
+      catch: { label: "Trips", icon: Compass, unit: "", format: (v) => `${v}` },
+      reputation: { label: "Reputation", icon: Star },
+    },
+    conditions: {
+      waves: { label: "Sea State", icon: Waves },
+      wind: { label: "Wind", icon: Wind },
+      weather: { label: "Weather", icon: Sunrise },
+      pfz: { label: "Route", icon: Navigation2 },
+    },
+    mapBaseLabel: "Origin Port",
+    upgrade: { title: "VESSEL UPGRADE", desc: "Increases starting fuel capacity and safety headroom for every future crossing.", icon: Ship },
+    fuelBonusItem: { id: "engineTuning", amount: 15 },
+    challengeIncome: 1800,
+    shopItems: [
+      { id: "navSuite", name: "Navigation Suite", desc: "More precise route and current data", price: 2500, icon: Navigation2 },
+      { id: "engineTuning", name: "Engine Tuning", desc: "+15 starting fuel each day", price: 2000, icon: Fuel },
+      { id: "safetyGear", name: "Safety Equipment Kit", desc: "+10 starting safety each day", price: 1500, icon: Shield },
+    ],
+    achievements: [
+      { title: "Safe Navigator", desc: "Complete 5 days with Safety > 80", icon: Compass, type: "days", target: 5 },
+      { title: "Route Master", desc: "Make 10 good navigation decisions", icon: Navigation2, type: "good", target: 10 },
+      { title: "Emergency Captain", desc: "Handle an emergency at sea", icon: Award, type: "flag", target: 1 },
+    ],
+  },
+
+  tourist: {
+    location: "Araku Bay Tours",
+    departureTime: "07:00 AM",
+    startState: TOURIST_START,
+    scenarios: TOURIST_SCENARIOS,
+    randomEvent: TOURIST_EVENT,
+    advisoryPop: TOURIST_ADVISORY,
+    dayFlow: TOURIST_DAY_FLOW,
+    labels: {
+      money: { label: "Income", icon: TrendingUp },
+      fuel: { label: "Fuel", icon: Fuel },
+      catch: { label: "Tourists", icon: Users, unit: "", format: (v) => `${v}` },
+      reputation: { label: "Satisfaction", icon: Star },
+    },
+    conditions: {
+      waves: { label: "Waves", icon: Waves },
+      wind: { label: "Wind", icon: Wind },
+      weather: { label: "Weather", icon: Sunrise },
+      pfz: { label: "Tour Zone", icon: MapPin },
+    },
+    mapBaseLabel: "Dock",
+    upgrade: { title: "BOAT UPGRADE", desc: "Increases starting fuel capacity and safety headroom for every future tour.", icon: Ship },
+    fuelBonusItem: { id: "fuelEfficiency", amount: 15 },
+    challengeIncome: 2200,
+    shopItems: [
+      { id: "comfortUpgrade", name: "Comfort & Shade Upgrade", desc: "Improves passenger comfort ratings", price: 1800, icon: Sparkles },
+      { id: "fuelEfficiency", name: "Engine Efficiency Kit", desc: "+15 starting fuel each day", price: 2000, icon: Fuel },
+      { id: "passengerSafety", name: "Passenger Safety Kit", desc: "+10 starting safety each day", price: 1500, icon: Shield },
+    ],
+    achievements: [
+      { title: "Trusted Operator", desc: "Complete 5 days with Safety > 80", icon: Star, type: "days", target: 5 },
+      { title: "Happy Passengers", desc: "Make 10 good decisions", icon: Users, type: "good", target: 10 },
+      { title: "Safe Tour Leader", desc: "Handle a tour emergency safely", icon: Award, type: "flag", target: 1 },
+    ],
+  },
+
+  resident: {
+    location: "Uppada Coastal Village",
+    departureTime: "05:00 AM",
+    startState: RESIDENT_START,
+    scenarios: RESIDENT_SCENARIOS,
+    randomEvent: RESIDENT_EVENT,
+    advisoryPop: RESIDENT_ADVISORY,
+    dayFlow: RESIDENT_DAY_FLOW,
+    labels: {
+      money: { label: "Resources", icon: ShoppingBag },
+      fuel: { label: "Preparedness", icon: Shield },
+      catch: { label: "Community Support", icon: Users, unit: "", format: (v) => `${v}` },
+      reputation: { label: "Trust", icon: Star },
+    },
+    conditions: {
+      waves: { label: "Storm Surge", icon: Waves },
+      wind: { label: "Wind", icon: Wind },
+      weather: { label: "Sky", icon: CloudRain },
+      pfz: { label: "Alert Zone", icon: AlertTriangle },
+    },
+    mapBaseLabel: "Shelter",
+    upgrade: { title: "HOME & COMMUNITY UPGRADE", desc: "Increases starting preparedness and safety headroom for every future storm.", icon: Home },
+    fuelBonusItem: { id: "emergencyKit", amount: 15 },
+    challengeIncome: 100,
+    shopItems: [
+      { id: "commsRadio", name: "Emergency Radio", desc: "Stay informed with official alerts", price: 1200, icon: Radio },
+      { id: "emergencyKit", name: "Emergency Preparedness Kit", desc: "+15 starting preparedness each day", price: 1800, icon: Package },
+      { id: "firstAid", name: "First Aid & Home Safety Kit", desc: "+10 starting safety each day", price: 1200, icon: Shield },
+    ],
+    achievements: [
+      { title: "Prepared Resident", desc: "Complete 5 days with Safety > 80", icon: Shield, type: "days", target: 5 },
+      { title: "Community Helper", desc: "Make 10 good decisions", icon: Users, type: "good", target: 10 },
+      { title: "Emergency Ready", desc: "Survive a major coastal hazard", icon: Award, type: "flag", target: 1 },
+    ],
+  },
+};
+
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+function levelFromXp(xp) { return Math.floor(xp / 100) + 1; }
+
+const REP_DELTA = { safe: 3, moderate: 1, risky: -3, dangerous: -8 };
+
+function applyEffects(state, effects, outcome) {
+  return {
+    money: Math.max(0, state.money + effects.money),
+    safety: clamp(state.safety + effects.safety, 0, 100),
+    fuel: clamp(state.fuel + effects.fuel, 0, 100),
+    catch: Math.max(0, state.catch + effects.catch),
+    xp: state.xp + Math.max(0, effects.knowledge),
+    reputation: clamp(state.reputation + (REP_DELTA[outcome] || 0), 0, 100),
+  };
+}
+
+/* ============================================================
+   GLOBAL AMBIENCE
+   ============================================================ */
+
+function GlobalStyle() {
+  return (
+    <style>{`
+      @keyframes seawiseDrift { 0% { transform: translateY(0) translateX(0); opacity: 0; } 8% { opacity: .55; } 92% { opacity: .4; } 100% { transform: translateY(-620px) translateX(14px); opacity: 0; } }
+      @keyframes seawiseRay { 0%,100% { opacity: .10; transform: translateX(0) rotate(8deg); } 50% { opacity: .22; transform: translateX(10px) rotate(8deg); } }
+      @keyframes seawiseSway { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-24px); } }
+      @keyframes seawisePulse { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+      @keyframes seawiseGlowRing { 0% { transform: scale(0.85); opacity: .5; } 100% { transform: scale(1.9); opacity: 0; } }
+      @keyframes seawisePopIn { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+      @keyframes seawiseShimmer { 0% { background-position: -140px 0; } 100% { background-position: 140px 0; } }
+      @keyframes seawiseFadeUp { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+      .sw-fade-up { animation: seawiseFadeUp .45s cubic-bezier(.16,1,.3,1) both; }
+      .sw-press { transition: transform .15s ease, box-shadow .2s ease, filter .2s ease; }
+      .sw-press:active { transform: scale(0.97); filter: brightness(0.97); }
+      .sw-card-hover { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+      .sw-card-hover:hover { transform: translateY(-2px); border-color: rgba(56,214,201,0.45); }
+      .sw-scrollbar::-webkit-scrollbar { width: 4px; }
+      .sw-scrollbar::-webkit-scrollbar-thumb { background: rgba(56,214,201,0.25); border-radius: 4px; }
+    `}</style>
+  );
+}
+
+function AmbientOcean() {
+  const bubbles = [
+    { l: "6%", s: 5, d: 13, delay: 0 }, { l: "18%", s: 3, d: 17, delay: 2.5 },
+    { l: "30%", s: 6, d: 11, delay: 5 }, { l: "45%", s: 4, d: 15, delay: 1 },
+    { l: "58%", s: 3, d: 19, delay: 4 }, { l: "70%", s: 5, d: 12, delay: 6.5 },
+    { l: "82%", s: 4, d: 16, delay: 3 }, { l: "92%", s: 3, d: 14, delay: 8 },
+  ];
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+      <div className="absolute inset-0" style={{ background: `radial-gradient(120% 70% at 50% -10%, ${T.cyanDim}55 0%, transparent 55%)` }} />
+      <div className="absolute -left-6 top-10 w-40 h-[70%]" style={{ background: `linear-gradient(115deg, transparent, ${T.cyan}18, transparent)`, filter: "blur(10px)", animation: "seawiseRay 7s ease-in-out infinite" }} />
+      <div className="absolute left-1/3 top-0 w-24 h-[80%]" style={{ background: `linear-gradient(115deg, transparent, ${T.blue}14, transparent)`, filter: "blur(12px)", animation: "seawiseRay 9s ease-in-out infinite 1.5s" }} />
+      {bubbles.map((b, i) => (
+        <span key={i} className="absolute rounded-full" style={{
+          left: b.l, bottom: -20, width: b.s, height: b.s,
+          background: "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), rgba(56,214,201,0.15))",
+          animation: `seawiseDrift ${b.d}s linear infinite`, animationDelay: `${b.delay}s`,
+        }} />
+      ))}
+      <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 60%, ${T.bgDeep}CC 100%)` }} />
+    </div>
+  );
+}
+
+function CircularGauge({ value, max = 100, color, size = 96, stroke = 8, icon: Icon, label }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = clamp((value / max) * 100, 0, 100);
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={T.panel} strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 900ms cubic-bezier(.16,1,.3,1)", filter: `drop-shadow(0 0 6px ${color}88)` }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center gap-0.5">
+        {Icon && <Icon size={13} style={{ color }} />}
+        <span className="text-lg font-black font-mono" style={{ color: T.ink }}>{Math.round(value)}</span>
+        {label && <span className="text-[8px] uppercase tracking-wide" style={{ color: T.inkFaint }}>{label}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------- Shared bits ----------------------- */
+
+function TopBar({ title, onBack, right }) {
+  return (
+    <div className="flex items-center justify-between px-4 py-3 shrink-0 relative"
+      style={{ borderBottom: `1px solid ${T.line}`, background: "rgba(4,14,26,0.55)", backdropFilter: "blur(10px)" }}>
+      <div className="flex items-center gap-2 w-8">
+        {onBack && (
+          <button onClick={onBack} className="p-1.5 -ml-1 rounded-lg sw-press" style={{ color: T.inkMuted, background: T.panel }}>
+            <ArrowLeft size={16} />
+          </button>
+        )}
+      </div>
+      <span className="text-sm font-bold tracking-[0.14em]" style={{ color: T.ink }}>{title}</span>
+      <div className="w-8 flex justify-end">{right}</div>
+      <div className="absolute left-0 right-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${T.cyan}55, transparent)` }} />
+    </div>
+  );
+}
+
+function Bar({ icon: Icon, label, value, max = 100, color }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <Icon size={13} style={{ color }} />
+      <span className="text-[11px] w-16 shrink-0 truncate" style={{ color: T.inkMuted }}>{label}</span>
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: T.panel }}>
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${clamp((value / max) * 100, 0, 100)}%`, background: `linear-gradient(90deg, ${color}99, ${color})`, boxShadow: `0 0 8px ${color}77` }} />
+      </div>
+      <span className="text-[11px] font-mono w-9 text-right shrink-0 font-semibold" style={{ color: T.ink }}>{Math.round(value)}</span>
+    </div>
+  );
+}
+
+function Chip({ icon: Icon, label, value, tone }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl px-2.5 py-2 sw-card-hover" style={{ background: T.panel, border: `1px solid ${T.line}`, backdropFilter: "blur(6px)" }}>
+      <Icon size={14} style={{ color: tone || T.inkMuted }} />
+      <div className="flex flex-col leading-tight min-w-0">
+        <span className="text-[9px] tracking-wide truncate" style={{ color: T.inkFaint }}>{label}</span>
+        <span className="text-xs font-semibold font-mono truncate" style={{ color: T.ink }}>{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function Btn({ children, onClick, color = T.green, icon: Icon, dark = false }) {
+  return (
+    <button onClick={onClick}
+      className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 font-bold text-sm sw-press"
+      style={{ background: `linear-gradient(135deg, ${color}, ${color}CC)`, color: dark ? T.ink : "#04140F", boxShadow: `0 6px 18px -6px ${color}88` }}>
+      {children}{Icon ? <Icon size={16} /> : null}
+    </button>
+  );
+}
+
+function OutlineBtn({ children, onClick, color = T.line, textColor }) {
+  return (
+    <button onClick={onClick}
+      className="w-full flex items-center justify-center gap-2 rounded-xl py-3 font-semibold text-sm sw-press"
+      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${color}`, color: textColor || T.inkMuted }}>
+      {children}
+    </button>
+  );
+}
+
+function Waveline({ level = "moderate" }) {
+  const amp = { calm: 4, moderate: 9, high: 16 }[level] ?? 9;
+  const speed = { calm: 7, moderate: 4.5, high: 2.6 }[level] ?? 4.5;
+  const color = level === "high" ? T.red : level === "moderate" ? T.orange : T.green;
+  const path = `M0,40 Q 60,${40 - amp} 120,40 T 240,40 T 360,40 T 480,40 V80 H0 Z`;
+  return (
+    <div className="relative w-full h-14 overflow-hidden rounded-xl" style={{ background: "linear-gradient(180deg, #0B2A4A 0%, #051224 100%)", border: `1px solid ${T.line}` }}>
+      <svg viewBox="0 0 480 80" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+        <path d={path} fill={color} opacity="0.75" style={{ animation: `seawiseSway ${speed}s ease-in-out infinite` }} />
+      </svg>
+      <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 22px ${color}33` }} />
+    </div>
+  );
+}
+
+function BottomNav({ active, onNav }) {
+  const items = [
+    { id: "dashboard", icon: Home, label: "Home" },
+    { id: "shop", icon: ShoppingBag, label: "Shop" },
+    { id: "stats", icon: BarChart3, label: "Stats" },
+    { id: "profile", icon: User, label: "Profile" },
+  ];
+  return (
+    <div className="flex items-center justify-around px-2 py-2.5 shrink-0 relative" style={{ borderTop: `1px solid ${T.line}`, background: "rgba(2,9,17,0.85)", backdropFilter: "blur(10px)" }}>
+      <div className="absolute left-0 right-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${T.cyan}44, transparent)` }} />
+      {items.map((it) => {
+        const Icon = it.icon;
+        const isActive = active === it.id;
+        return (
+          <button key={it.id} onClick={() => onNav(it.id)} className="flex flex-col items-center gap-1 px-3 sw-press relative">
+            {isActive && <span className="absolute -top-2 w-1 h-1 rounded-full" style={{ background: T.cyan, boxShadow: `0 0 8px ${T.cyan}` }} />}
+            <Icon size={18} style={{ color: isActive ? T.cyan : T.inkFaint, filter: isActive ? `drop-shadow(0 0 4px ${T.cyan}88)` : "none" }} />
+            <span className="text-[9px] font-medium" style={{ color: isActive ? T.cyan : T.inkFaint }}>{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ----------------------- Screens: entry ----------------------- */
+
+function Splash({ onPlay, language, setLanguage }) {
+  return (
+    <div className="flex flex-col h-full relative" style={{ background: "linear-gradient(180deg, #08243F 0%, #010810 70%)" }}>
+      <AmbientOcean />
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-5 relative z-10">
+        <div className="relative flex items-center justify-center">
+          <span className="absolute w-24 h-24 rounded-full" style={{ border: `1px solid ${T.cyan}55`, animation: "seawiseGlowRing 2.6s ease-out infinite" }} />
+          <span className="absolute w-24 h-24 rounded-full" style={{ border: `1px solid ${T.cyan}40`, animation: "seawiseGlowRing 2.6s ease-out infinite 1.3s" }} />
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center relative" style={{ background: T.panel, border: `1px solid ${T.lineStrong}`, boxShadow: `0 0 30px ${T.cyan}33` }}>
+            <Anchor size={32} style={{ color: T.cyan }} />
+          </div>
+        </div>
+        <div>
+          <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${T.ink}, ${T.cyan})` }}>SEAWISE</h1>
+          <p className="text-sm mt-1 font-medium tracking-wide" style={{ color: T.inkMuted }}>Decide. Sail. Survive.</p>
+        </div>
+        <div className="w-full max-w-xs"><Waveline level="calm" /></div>
+        <p className="text-xs max-w-xs leading-relaxed" style={{ color: T.inkFaint }}>
+          Ocean advisories, real trade-offs, and a coastal journey where every decision has a consequence.
+        </p>
+      </div>
+      <div className="p-5 pt-0 flex flex-col gap-3 relative z-10">
+        <Btn onClick={onPlay} color={T.cyan} icon={ChevronRight}>PLAY</Btn>
+        <div className="flex items-center justify-center gap-2 text-xs">
+          <Globe size={12} style={{ color: T.inkFaint }} />
+          <button onClick={() => setLanguage("English")} className="px-1 sw-press" style={{ color: language === "English" ? T.cyan : T.inkFaint, fontWeight: 600 }}>English</button>
+          <span style={{ color: T.inkFaint }}>|</span>
+          <button onClick={() => setLanguage("తెలుగు")} className="px-1 sw-press" style={{ color: language === "తెలుగు" ? T.cyan : T.inkFaint, fontWeight: 600 }}>తెలుగు</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoleSelect({ onPick }) {
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="CHOOSE YOUR ROLE" /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-5 flex flex-col gap-3 relative z-10">
+        <p className="text-xs -mt-1" style={{ color: T.inkMuted }}>Who are you playing as today?</p>
+        {ROLES.map((r, i) => {
+          const Icon = r.icon;
+          return (
+            <button
+              key={r.id}
+              onClick={() => onPick(r)}
+              className="flex items-center gap-3.5 rounded-2xl p-4 text-left sw-press sw-card-hover sw-fade-up"
+              style={{ background: T.card, border: `1px solid ${T.line}`, backdropFilter: "blur(8px)", animationDelay: `${i * 60}ms` }}
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg, ${T.panelLight}, ${T.panel})`, border: `1px solid ${T.line}` }}>
+                <Icon size={20} style={{ color: T.cyan }} />
+              </div>
+              <div className="flex-1">
+                <span className="text-sm font-bold" style={{ color: T.ink }}>{r.name}</span>
+                <p className="text-xs mt-0.5" style={{ color: T.inkFaint }}>{r.desc}</p>
+              </div>
+              <ChevronRight size={16} style={{ color: T.inkFaint }} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------- Dashboard family ----------------------- */
+
+function Dashboard({ role, cfg, playerState, dayNumber, onStartDay, onNav, boatLevel }) {
+  const Icon = role.icon;
+  const level = levelFromXp(playerState.xp);
+  const moneyLabel = cfg.labels.money;
+  const catchLabel = cfg.labels.catch;
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="flex items-center justify-between px-5 py-4 shrink-0 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: T.panel, border: `1px solid ${T.lineStrong}`, boxShadow: `0 0 14px ${T.cyan}22` }}>
+            <Icon size={19} style={{ color: T.cyan }} />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: T.ink }}>{role.name}</p>
+            <p className="text-[11px]" style={{ color: T.inkFaint }}>Level {level} · {cfg.upgrade.title.split(" ")[0]} Lv.{boatLevel}</p>
+          </div>
+        </div>
+        <button onClick={() => onNav("settings")} className="p-2 rounded-lg sw-press" style={{ background: T.panel, border: `1px solid ${T.line}` }}>
+          <SettingsIcon size={15} style={{ color: T.inkMuted }} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pb-3 flex flex-col gap-4 relative z-10">
+        <div className="rounded-2xl p-4 flex flex-col gap-3 sw-fade-up" style={{ background: T.card, border: `1px solid ${T.line}`, backdropFilter: "blur(8px)" }}>
+          <div className="flex items-center gap-4">
+            <CircularGauge value={playerState.safety} color={T.green} icon={Shield} label="Safety" size={92} />
+            <div className="flex-1 flex flex-col gap-3">
+              <Bar icon={cfg.labels.fuel.icon} label={cfg.labels.fuel.label} value={playerState.fuel} color={T.blue} />
+              <Bar icon={cfg.labels.reputation.icon} label={cfg.labels.reputation.label} value={playerState.reputation} color={T.gold} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          <Chip icon={moneyLabel.icon} label={moneyLabel.label.toUpperCase()} value={`₹${playerState.money.toLocaleString("en-IN")}`} tone={T.gold} />
+          <Chip icon={catchLabel.icon} label={`TOTAL ${catchLabel.label.toUpperCase()}`} value={catchLabel.format ? catchLabel.format(playerState.catch) : playerState.catch} tone={T.cyan} />
+        </div>
+
+        <button onClick={onStartDay}
+          className="rounded-2xl p-5 flex flex-col gap-1 text-left sw-press sw-card-hover relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #0E2A4A 0%, #0A3D63 100%)", border: `1px solid ${T.lineStrong}` }}>
+          <span className="absolute -right-8 -top-8 w-28 h-28 rounded-full" style={{ background: `${T.cyan}22`, filter: "blur(18px)" }} />
+          <div className="flex items-center gap-2">
+            <Sunrise size={16} style={{ color: T.orange }} />
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: T.inkMuted }}>Day {dayNumber}</span>
+          </div>
+          <span className="text-lg font-bold" style={{ color: T.ink }}>{cfg.location}</span>
+          <span className="text-xs mt-1" style={{ color: T.inkFaint }}>Tap to check today's conditions and begin</span>
+        </button>
+
+        <div className="pt-1">
+          <Btn onClick={onStartDay} color={T.cyan} icon={ChevronRight}>START DAY</Btn>
+        </div>
+      </div>
+
+      <div className="relative z-10"><BottomNav active="dashboard" onNav={onNav} /></div>
+    </div>
+  );
+}
+
+function Shop({ cfg, money, owned, onBuy, onNav }) {
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="SHOP" /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-4 flex flex-col gap-2.5 relative z-10">
+        <Chip icon={TrendingUp} label="BALANCE" value={`₹${money.toLocaleString("en-IN")}`} tone={T.gold} />
+        {cfg.shopItems.map((it, i) => {
+          const Icon = it.icon;
+          const isOwned = owned[it.id];
+          return (
+            <div key={it.id} className="flex items-center gap-3 rounded-2xl p-3.5 sw-card-hover sw-fade-up" style={{ background: T.card, border: `1px solid ${isOwned ? T.lineStrong : T.line}`, backdropFilter: "blur(6px)", animationDelay: `${i * 60}ms` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: T.panel }}>
+                <Icon size={17} style={{ color: T.cyan }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{ color: T.ink }}>{it.name}</p>
+                <p className="text-[11px]" style={{ color: T.inkFaint }}>{it.desc}</p>
+              </div>
+              {isOwned ? (
+                <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg" style={{ background: T.greenDim, color: T.green }}>OWNED</span>
+              ) : (
+                <button onClick={() => onBuy(it.id, it.price)} className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0 sw-press"
+                  style={{ background: money >= it.price ? `linear-gradient(135deg, ${T.green}, ${T.green}CC)` : T.panel, color: money >= it.price ? "#04140F" : T.inkFaint }}>
+                  ₹{it.price}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="relative z-10"><BottomNav active="shop" onNav={onNav} /></div>
+    </div>
+  );
+}
+
+function Stats({ stats, onNav }) {
+  const [tab, setTab] = useState("overall");
+  const rows = tab === "overall"
+    ? [
+        { label: "Days Played", value: stats.daysPlayed },
+        { label: "Total Score", value: stats.totalScore },
+        { label: "Best Score", value: stats.bestScore },
+        { label: "Good Decisions", value: stats.goodDecisions },
+        { label: "Longest Streak", value: `${stats.longestStreak} Days` },
+      ]
+    : [
+        { label: "Days This Week", value: Math.min(stats.daysPlayed, 7) },
+        { label: "Avg. Score", value: stats.daysPlayed ? Math.round(stats.totalScore / stats.daysPlayed) : 0 },
+        { label: "Good Decisions", value: Math.min(stats.goodDecisions, stats.daysPlayed * 4) },
+      ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="YOUR STATS" /></div>
+      <div className="px-5 pt-4 relative z-10">
+        <div className="flex rounded-xl p-1" style={{ background: T.panel, border: `1px solid ${T.line}` }}>
+          {["overall", "week"].map((t) => (
+            <button key={t} onClick={() => setTab(t)} className="flex-1 py-2 rounded-lg text-xs font-semibold sw-press"
+              style={{ background: tab === t ? T.cardSolid : "transparent", color: tab === t ? T.ink : T.inkFaint }}>
+              {t === "overall" ? "OVERALL" : "THIS WEEK"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-4 flex flex-col gap-2.5 relative z-10">
+        {rows.map((r, i) => (
+          <div key={r.label} className="flex items-center justify-between rounded-xl px-4 py-3 sw-card-hover sw-fade-up" style={{ background: T.card, border: `1px solid ${T.line}`, animationDelay: `${i * 50}ms` }}>
+            <span className="text-sm" style={{ color: T.inkMuted }}>{r.label}</span>
+            <span className="text-sm font-mono font-bold" style={{ color: T.cyan }}>{r.value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="relative z-10"><BottomNav active="stats" onNav={onNav} /></div>
+    </div>
+  );
+}
+
+function Profile({ role, playerState, boatLevel, onNav }) {
+  const level = levelFromXp(playerState.xp);
+  const links = [
+    { id: "achievements", label: "Achievements", icon: Award },
+    { id: "boatupgrade", label: "Upgrade", icon: Wrench },
+    { id: "howtoplay", label: "How to Play", icon: Info },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: "exitconfirm", label: "Exit Game", icon: LogOut },
+  ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="PROFILE" /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-4 flex flex-col gap-4 relative z-10">
+        <div className="flex items-center gap-3.5 rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(8px)" }}>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: T.panel, boxShadow: `0 0 16px ${T.cyan}33` }}>
+            <role.icon size={22} style={{ color: T.cyan }} />
+          </div>
+          <div>
+            <p className="text-base font-bold" style={{ color: T.ink }}>{role.name}</p>
+            <p className="text-xs" style={{ color: T.inkFaint }}>Level {level} · {playerState.xp} XP · Lv.{boatLevel}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          {links.map((l, i) => {
+            const Icon = l.icon;
+            return (
+              <button key={l.id} onClick={() => onNav(l.id)}
+                className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-left sw-press sw-card-hover sw-fade-up"
+                style={{ background: T.card, border: `1px solid ${l.id === "exitconfirm" ? T.red + "44" : T.line}`, animationDelay: `${i * 50}ms` }}>
+                <Icon size={16} style={{ color: l.id === "exitconfirm" ? T.red : T.inkMuted }} />
+                <span className="text-sm font-medium flex-1" style={{ color: l.id === "exitconfirm" ? T.red : T.ink }}>{l.label}</span>
+                <ChevronRight size={15} style={{ color: T.inkFaint }} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="relative z-10"><BottomNav active="profile" onNav={onNav} /></div>
+    </div>
+  );
+}
+
+function Achievements({ cfg, stats, onBack }) {
+  const list = cfg.achievements.map((a) => {
+    let progress = 0;
+    if (a.type === "days") progress = Math.min(stats.daysPlayed, a.target);
+    else if (a.type === "good") progress = Math.min(stats.goodDecisions, a.target);
+    else progress = stats.daysPlayed > 0 ? a.target : 0;
+    return { ...a, progress };
+  });
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="ACHIEVEMENTS" onBack={onBack} /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-4 flex flex-col gap-2.5 relative z-10">
+        {list.map((a, i) => {
+          const Icon = a.icon;
+          const done = a.progress >= a.target;
+          return (
+            <div key={a.title} className="rounded-2xl p-4 sw-card-hover sw-fade-up" style={{ background: T.card, border: `1px solid ${done ? T.lineStrong : T.line}`, animationDelay: `${i * 60}ms`, boxShadow: done ? `0 0 18px ${T.green}22` : "none" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: done ? T.greenDim : T.panel, animation: done ? "seawisePulse 2.4s ease-in-out infinite" : "none" }}>
+                  <Icon size={17} style={{ color: done ? T.green : T.inkFaint }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: T.ink }}>{a.title}</p>
+                  <p className="text-[11px]" style={{ color: T.inkFaint }}>{a.desc}</p>
+                </div>
+                {done ? (
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ background: T.greenDim, color: T.green }}>DONE</span>
+                ) : (
+                  <span className="text-[10px] font-mono" style={{ color: T.inkFaint }}>{a.progress}/{a.target}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BoatUpgrade({ cfg, boatLevel, money, onUpgrade, onBack }) {
+  const cost = 8000 * boatLevel;
+  const UpgradeIcon = cfg.upgrade.icon;
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title={cfg.upgrade.title} onBack={onBack} /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-5 flex flex-col gap-4 relative z-10">
+        <div className="flex flex-col items-center rounded-2xl p-6 gap-3" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(8px)" }}>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: T.panel, boxShadow: `0 0 20px ${T.cyan}33` }}>
+            <UpgradeIcon size={30} style={{ color: T.cyan }} />
+          </div>
+          <p className="text-lg font-bold" style={{ color: T.ink }}>Level {boatLevel} → {boatLevel + 1}</p>
+          <p className="text-xs text-center" style={{ color: T.inkFaint }}>{cfg.upgrade.desc}</p>
+          <p className="text-sm font-mono font-bold" style={{ color: T.gold }}>₹{cost.toLocaleString("en-IN")}</p>
+        </div>
+        <Btn onClick={() => onUpgrade(cost)} color={money >= cost ? T.cyan : T.panel} dark={money < cost}>
+          {money >= cost ? "UPGRADE" : "NOT ENOUGH FUNDS"}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function Settings({ settings, setSettings, onBack }) {
+  const toggles = [
+    { id: "sound", label: "Sound", icon: Volume2 },
+    { id: "music", label: "Music", icon: Music2 },
+    { id: "vibration", label: "Vibration", icon: Vibrate },
+    { id: "notifications", label: "Notifications", icon: AlertTriangle },
+  ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="SETTINGS" onBack={onBack} /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-4 flex flex-col gap-2.5 relative z-10">
+        <div className="flex items-center justify-between rounded-xl px-4 py-3.5" style={{ background: T.card, border: `1px solid ${T.line}` }}>
+          <div className="flex items-center gap-2.5"><Globe size={15} style={{ color: T.inkMuted }} /><span className="text-sm" style={{ color: T.ink }}>Language</span></div>
+          <span className="text-sm font-semibold" style={{ color: T.cyan }}>{settings.language}</span>
+        </div>
+        {toggles.map((t) => {
+          const Icon = t.icon;
+          const on = settings[t.id];
+          return (
+            <div key={t.id} className="flex items-center justify-between rounded-xl px-4 py-3.5" style={{ background: T.card, border: `1px solid ${T.line}` }}>
+              <div className="flex items-center gap-2.5"><Icon size={15} style={{ color: T.inkMuted }} /><span className="text-sm" style={{ color: T.ink }}>{t.label}</span></div>
+              <button onClick={() => setSettings((s) => ({ ...s, [t.id]: !s[t.id] }))}
+                className="w-10 h-6 rounded-full relative sw-press"
+                style={{ background: on ? T.cyan : T.panel, transition: "background .2s ease", boxShadow: on ? `0 0 10px ${T.cyan}66` : "none" }}>
+                <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-200" style={{ left: on ? 18 : 2 }} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HowToPlay({ onBack }) {
+  const steps = [
+    "Check the conditions and advisories.",
+    "Choose the best action for the situation.",
+    "Your decision affects safety, income and other role-specific metrics.",
+    "Try to get the best balance across a full day.",
+  ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="relative z-10"><TopBar title="HOW TO PLAY" onBack={onBack} /></div>
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 py-5 flex flex-col gap-3 relative z-10">
+        {steps.map((s, i) => (
+          <div key={i} className="flex items-center gap-3.5 rounded-2xl p-4 sw-fade-up" style={{ background: T.card, border: `1px solid ${T.line}`, animationDelay: `${i * 70}ms` }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-sm" style={{ background: T.panel, color: T.cyan, border: `1px solid ${T.lineStrong}` }}>{i + 1}</div>
+            <p className="text-sm" style={{ color: T.ink }}>{s}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExitConfirm({ onCancel, onExit }) {
+  return (
+    <div className="flex flex-col h-full items-center justify-center px-6 gap-5 relative">
+      <AmbientOcean />
+      <div className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center sw-fade-up relative z-10" style={{ background: T.card, border: `1px solid ${T.red}55`, backdropFilter: "blur(10px)" }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "rgba(255,107,107,0.15)" }}>
+          <X size={20} style={{ color: T.red }} />
+        </div>
+        <p className="text-base font-bold" style={{ color: T.ink }}>Exit Game</p>
+        <p className="text-sm" style={{ color: T.inkMuted }}>Are you sure you want to exit? Your progress this session will be lost.</p>
+        <div className="flex flex-col gap-2.5 w-full pt-2">
+          <Btn onClick={onExit} color={T.red}>YES, EXIT</Btn>
+          <OutlineBtn onClick={onCancel}>CANCEL</OutlineBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------- Day flow screens ----------------------- */
+
+function DayOverview({ cfg, dayNumber, playerState, firstScenario, onContinue }) {
+  const c = cfg.conditions;
+  const rows = [
+    { icon: c.waves.icon, label: c.waves.label, value: firstScenario.conditions.waves },
+    { icon: c.wind.icon, label: c.wind.label, value: firstScenario.conditions.wind },
+    { icon: c.weather.icon, label: c.weather.label, value: firstScenario.conditions.weather },
+    { icon: c.pfz.icon, label: c.pfz.label, value: firstScenario.conditions.pfz },
+    { icon: AlertTriangle, label: "Warning", value: firstScenario.conditions.warning },
+    { icon: cfg.labels.fuel.icon, label: cfg.labels.fuel.label, value: `${playerState.fuel}%` },
+  ];
+  return (
+    <div className="flex flex-col h-full relative" style={{ background: "linear-gradient(180deg, #0A3355 0%, #010810 60%)" }}>
+      <AmbientOcean />
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pt-6 pb-2 flex flex-col gap-4 relative z-10">
+        <div className="sw-fade-up">
+          <span className="text-xs font-bold tracking-[0.2em]" style={{ color: T.orange }}>DAY {String(dayNumber).padStart(2, "0")}</span>
+          <h2 className="text-2xl font-black mt-1" style={{ color: T.ink }}>{cfg.departureTime}</h2>
+          <p className="text-sm" style={{ color: T.inkMuted }}>{cfg.location}</p>
+        </div>
+        <div className="rounded-2xl p-4 sw-fade-up" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(8px)" }}>
+          <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: T.cyan }}>Today's Conditions</span>
+          <div className="flex flex-col gap-2.5 mt-3">
+            {rows.map((r) => {
+              const Icon = r.icon;
+              return (
+                <div key={r.label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5"><Icon size={14} style={{ color: T.blue }} /><span className="text-sm" style={{ color: T.inkMuted }}>{r.label}</span></div>
+                  <span className="text-sm font-mono font-semibold" style={{ color: T.ink }}>{r.value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="p-5 pt-2 relative z-10"><Btn onClick={onContinue} color={T.cyan} icon={ChevronRight}>PREPARE &amp; CONTINUE</Btn></div>
+    </div>
+  );
+}
+
+function DecisionCard({ cfg, scenario, playerState, onDecide, onMap }) {
+  const c = cfg.conditions;
+  const rows = [
+    { icon: c.waves.icon, label: c.waves.label, value: scenario.conditions.waves },
+    { icon: c.wind.icon, label: c.wind.label, value: scenario.conditions.wind },
+    { icon: c.weather.icon, label: c.weather.label, value: scenario.conditions.weather },
+    { icon: c.pfz.icon, label: c.pfz.label, value: scenario.conditions.pfz },
+  ];
+  const hasWarning = scenario.conditions.warning && scenario.conditions.warning !== "None";
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pt-5 pb-2 flex flex-col gap-4 relative z-10">
+        <div className="grid grid-cols-4 gap-2">
+          <Chip icon={TrendingUp} label="₹" value={playerState.money.toLocaleString("en-IN")} tone={T.gold} />
+          <Chip icon={Shield} label="SAFE" value={playerState.safety} tone={T.green} />
+          <Chip icon={cfg.labels.fuel.icon} label={cfg.labels.fuel.label.slice(0, 4).toUpperCase()} value={`${playerState.fuel}%`} tone={T.blue} />
+          <Chip icon={cfg.labels.catch.icon} label={cfg.labels.catch.label.slice(0, 4).toUpperCase()} value={playerState.catch} tone={T.cyan} />
+        </div>
+
+        <div className="rounded-2xl overflow-hidden sw-fade-up" style={{ background: T.card, border: `1px solid ${hasWarning ? T.red + "66" : T.lineStrong}`, backdropFilter: "blur(8px)" }}>
+          <div className="flex items-center gap-2 px-4 pt-4">
+            <span className="text-[11px] font-mono" style={{ color: T.inkFaint }}>{scenario.time}</span>
+            {hasWarning && <AlertTriangle size={13} style={{ color: T.red, animation: "seawisePulse 1.6s ease-in-out infinite" }} />}
+            <span className="text-xs font-bold tracking-wide" style={{ color: hasWarning ? T.red : T.cyan }}>
+              {hasWarning ? scenario.conditions.warning.toUpperCase() : "OCEAN UPDATE"}
+            </span>
+          </div>
+          <div className="px-4 pt-2"><Waveline level={scenario.conditions.waves.includes("High") ? "high" : scenario.conditions.waves.includes("Moderate") ? "moderate" : "calm"} /></div>
+          <div className="grid grid-cols-2 gap-2 px-4 py-4">
+            {rows.map((r) => {
+              const Icon = r.icon;
+              return (
+                <div key={r.label} className="flex flex-col gap-1 rounded-xl p-2.5" style={{ background: T.panel }}>
+                  <div className="flex items-center gap-1.5"><Icon size={12} style={{ color: T.inkFaint }} /><span className="text-[9px] uppercase tracking-wide" style={{ color: T.inkFaint }}>{r.label}</span></div>
+                  <span className="text-xs font-semibold" style={{ color: T.ink }}>{r.value}</span>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={onMap} className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold sw-press" style={{ borderTop: `1px solid ${T.line}`, color: T.cyan }}>
+            <MapPin size={12} /> VIEW MAP
+          </button>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold" style={{ color: T.ink }}>WHAT WILL YOU DO?</p>
+          <p className="text-xs mt-0.5" style={{ color: T.inkMuted }}>{scenario.prompt}</p>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          {scenario.decisions.map((d, i) => {
+            const Icon = d.icon;
+            const color = BTN_COLORS[i % 3];
+            return (
+              <button key={d.id} onClick={() => onDecide(d)}
+                className="flex items-center gap-3 rounded-xl py-3.5 px-4 font-bold text-sm sw-press sw-card-hover"
+                style={{ background: `linear-gradient(135deg, ${color}, ${color}CC)`, color: "#08140F", boxShadow: `0 6px 16px -8px ${color}99` }}>
+                <Icon size={17} /> {d.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MapView({ cfg, scenario, onBack }) {
+  return (
+    <div className="flex flex-col h-full relative">
+      <div className="relative z-10"><TopBar title="MAP VIEW" onBack={onBack} /></div>
+      <div className="flex-1 px-5 py-5 flex flex-col gap-4 relative z-10">
+        <div className="flex-1 rounded-2xl relative overflow-hidden" style={{ background: "linear-gradient(160deg, #0A3355 0%, #072544 60%, #010810 100%)", border: `1px solid ${T.lineStrong}` }}>
+          <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
+            <circle cx="150" cy="170" r="6" fill="none" stroke={T.cyan} strokeWidth="1.5" opacity="0.5">
+              <animate attributeName="r" values="6;40;6" dur="3.4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="3.4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="210" cy="90" r="55" fill={T.red} opacity="0.16" />
+            <circle cx="90" cy="120" r="8" fill={T.green} style={{ filter: `drop-shadow(0 0 6px ${T.green})` }} />
+            <text x="90" y="145" fontSize="11" fill={T.green} textAnchor="middle">{cfg.conditions.pfz.label}</text>
+            <circle cx="150" cy="170" r="7" fill={T.cyan} style={{ filter: `drop-shadow(0 0 8px ${T.cyan})` }} />
+            <text x="150" y="192" fontSize="11" fill={T.cyan} textAnchor="middle">You</text>
+            <rect x="140" y="230" width="20" height="14" rx="3" fill={T.inkMuted} />
+            <text x="150" y="262" fontSize="11" fill={T.inkMuted} textAnchor="middle">{cfg.mapBaseLabel}</text>
+          </svg>
+        </div>
+        <div className="rounded-2xl p-4 flex flex-col gap-2" style={{ background: T.card, border: `1px solid ${T.line}` }}>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full" style={{ background: T.cyan }} /><span className="text-xs" style={{ color: T.inkMuted }}>You</span></div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full" style={{ background: T.green }} /><span className="text-xs" style={{ color: T.inkMuted }}>{cfg.conditions.pfz.label} · {scenario.conditions.pfz}</span></div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full" style={{ background: T.red }} /><span className="text-xs" style={{ color: T.inkMuted }}>Danger zone</span></div>
+          <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full" style={{ background: T.inkMuted }} /><span className="text-xs" style={{ color: T.inkMuted }}>{cfg.mapBaseLabel}</span></div>
+        </div>
+        <Btn onClick={onBack} color={T.cyan}>BACK TO DECISION</Btn>
+      </div>
+    </div>
+  );
+}
+
+function OutcomeScreen({ cfg, decision, effects, onContinue, isLastAction }) {
+  const meta = OUTCOME_META[decision.outcome];
+  const rows = [
+    { key: "money", label: cfg.labels.money.label, icon: cfg.labels.money.icon, fmt: (v) => `${v >= 0 ? "+" : ""}₹${v.toLocaleString("en-IN")}` },
+    { key: "safety", label: "Safety", icon: Shield, fmt: (v) => `${v >= 0 ? "+" : ""}${v}` },
+    { key: "fuel", label: cfg.labels.fuel.label, icon: cfg.labels.fuel.icon, fmt: (v) => `${v >= 0 ? "+" : ""}${v}%` },
+    { key: "knowledge", label: "Experience", icon: Sparkles, fmt: (v) => `+${v}` },
+  ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pt-6 pb-2 flex flex-col gap-4 relative z-10">
+        <div className="rounded-2xl p-5 flex flex-col gap-3 sw-fade-up" style={{ background: meta.glow, border: `1px solid ${meta.color}66`, backdropFilter: "blur(8px)" }}>
+          <span className="self-start text-[10px] tracking-wider font-bold px-2.5 py-1 rounded-full" style={{ background: meta.color, color: "#08140F" }}>{meta.label}</span>
+          <p className="text-sm font-semibold" style={{ color: T.ink }}>{decision.label}</p>
+          <p className="text-sm leading-relaxed" style={{ color: T.inkMuted }}>{decision.result}</p>
+        </div>
+        <div className="rounded-2xl p-4 grid grid-cols-2 gap-3" style={{ background: T.panel, border: `1px solid ${T.line}` }}>
+          {rows.map((r) => {
+            const v = effects[r.key === "knowledge" ? "knowledge" : r.key];
+            const Icon = r.icon;
+            const positive = v > 0, neutral = v === 0;
+            return (
+              <div key={r.key} className="flex items-center gap-2">
+                <Icon size={14} style={{ color: T.inkFaint }} />
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[10px]" style={{ color: T.inkFaint }}>{r.label}</span>
+                  <span className="text-sm font-mono font-semibold" style={{ color: neutral ? T.inkMuted : positive ? T.green : T.red }}>{r.fmt(v)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="rounded-2xl p-4 flex gap-3" style={{ background: T.card, border: `1px solid ${T.line}` }}>
+          <Info size={16} style={{ color: T.orange, flexShrink: 0, marginTop: 2 }} />
+          <div><span className="text-xs font-semibold tracking-wide uppercase" style={{ color: T.orange }}>Insight</span>
+            <p className="text-sm leading-relaxed mt-1" style={{ color: T.inkMuted }}>{decision.insight}</p></div>
+        </div>
+      </div>
+      <div className="p-5 pt-2 relative z-10"><Btn onClick={onContinue} color={T.cyan} icon={ChevronRight}>{isLastAction ? "SEE DAY SUMMARY" : "CONTINUE"}</Btn></div>
+    </div>
+  );
+}
+
+function RandomEventCard({ event, onDecide }) {
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pt-6 pb-2 flex flex-col gap-4 relative z-10">
+        <div className="rounded-2xl p-5 sw-fade-up" style={{ background: "rgba(169,140,255,0.12)", border: `1px solid ${T.purple}66`, backdropFilter: "blur(8px)" }}>
+          <span className="text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full" style={{ background: T.purple, color: "#170B2E" }}>RANDOM EVENT</span>
+          <div className="flex items-center gap-3 mt-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(169,140,255,0.18)" }}>
+              <Wrench size={20} style={{ color: T.purple }} />
+            </div>
+            <div>
+              <p className="text-base font-bold" style={{ color: T.ink }}>{event.title}</p>
+              <p className="text-xs mt-0.5" style={{ color: T.inkMuted }}>{event.desc}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2.5 pt-1">
+          {event.decisions.map((d, i) => {
+            const Icon = d.icon;
+            const color = BTN_COLORS[i % 3];
+            return (
+              <button key={d.id} onClick={() => onDecide(d)}
+                className="flex items-center gap-3 rounded-xl py-3.5 px-4 font-bold text-sm sw-press sw-card-hover"
+                style={{ background: `linear-gradient(135deg, ${color}, ${color}CC)`, color: "#08140F", boxShadow: `0 6px 16px -8px ${color}99` }}>
+                <Icon size={17} /> {d.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdvisoryPop({ advisory, onCheck }) {
+  return (
+    <div className="flex flex-col h-full items-center justify-center px-6 gap-5 text-center relative">
+      <AmbientOcean />
+      <div className="rounded-2xl p-6 flex flex-col items-center gap-3 sw-fade-up relative z-10" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(10px)" }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: T.panel, boxShadow: `0 0 16px ${T.cyan}44` }}>
+          <Navigation2 size={20} style={{ color: T.cyan }} />
+        </div>
+        <span className="text-xs font-bold tracking-wide" style={{ color: T.cyan }}>NEW ADVISORY</span>
+        <p className="text-sm leading-relaxed" style={{ color: T.ink }}>{advisory.message}</p>
+        <div className="w-full pt-2"><Btn onClick={onCheck} color={T.cyan} icon={ChevronRight}>CHECK CONDITIONS</Btn></div>
+        <p className="text-[11px]" style={{ color: T.inkFaint }}>Make the best decision!</p>
+      </div>
+    </div>
+  );
+}
+
+function DayComplete({ cfg, dayNumber, playerState, dayHistory, onContinue }) {
+  const counts = { safe: 0, moderate: 0, risky: 0, dangerous: 0 };
+  dayHistory.forEach((h) => counts[h.decision.outcome]++);
+  const decisionsScore = Math.round(((counts.safe * 1 + counts.moderate * 0.75 + counts.risky * 0.4) / Math.max(dayHistory.length, 1)) * 100);
+  const responsibleScore = Math.round(((counts.safe + counts.moderate) / Math.max(dayHistory.length, 1)) * 100);
+  const total = Math.round((playerState.safety + playerState.fuel + decisionsScore + responsibleScore) / 4);
+  const stars = total >= 85 ? 3 : total >= 65 ? 2 : 1;
+  const rows = [
+    { label: "Safety", value: `${playerState.safety}/100` },
+    { label: `${cfg.labels.fuel.label} Remaining`, value: `${playerState.fuel}/100` },
+    { label: "Decisions", value: `${decisionsScore}/100` },
+    { label: "Responsible Play", value: `${responsibleScore}/100` },
+  ];
+  return (
+    <div className="flex flex-col h-full relative">
+      <AmbientOcean />
+      <div className="flex-1 overflow-y-auto sw-scrollbar px-5 pt-6 pb-2 flex flex-col gap-4 relative z-10">
+        <div className="flex flex-col items-center text-center gap-1 pb-1 sw-fade-up">
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <Star key={i} size={20} fill={i < stars ? T.gold : "none"} style={{ color: T.gold, animation: i < stars ? `seawisePopIn .5s ease ${i * 0.12}s both` : "none", filter: i < stars ? `drop-shadow(0 0 6px ${T.gold}88)` : "none" }} />
+            ))}
+          </div>
+          <h2 className="text-xl font-black" style={{ color: T.ink }}>DAY {String(dayNumber).padStart(2, "0")} COMPLETE</h2>
+        </div>
+        <div className="rounded-2xl p-4" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(8px)" }}>
+          <div className="flex flex-col gap-2.5">
+            {rows.map((r) => (
+              <div key={r.label} className="flex items-center justify-between">
+                <span className="text-sm" style={{ color: T.inkMuted }}>{r.label}</span>
+                <span className="text-sm font-mono font-semibold" style={{ color: T.ink }}>{r.value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: `1px solid ${T.line}` }}>
+            <span className="text-sm font-bold" style={{ color: T.ink }}>TOTAL SCORE</span>
+            <span className="text-2xl font-black" style={{ color: T.gold, textShadow: `0 0 16px ${T.gold}55` }}>{total}<span className="text-sm" style={{ color: T.inkFaint }}>/100</span></span>
+          </div>
+        </div>
+        <div className="rounded-2xl p-4" style={{ background: T.panel, border: `1px solid ${T.line}` }}>
+          <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: T.inkMuted }}>{cfg.labels.money.label} today</span>
+          <p className="text-lg font-bold mt-1" style={{ color: T.gold }}>₹{playerState.money.toLocaleString("en-IN")}</p>
+        </div>
+      </div>
+      <div className="p-5 pt-2 relative z-10"><Btn onClick={onContinue} color={T.cyan} icon={ChevronRight}>CONTINUE</Btn></div>
+    </div>
+  );
+}
+
+function DailyChallenge({ cfg, met, onNext }) {
+  return (
+    <div className="flex flex-col h-full items-center justify-center px-6 gap-5 text-center relative">
+      <AmbientOcean />
+      <div className="rounded-2xl p-6 flex flex-col items-center gap-3 w-full sw-fade-up relative z-10" style={{ background: T.card, border: `1px solid ${T.lineStrong}`, backdropFilter: "blur(10px)" }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "rgba(255,206,110,0.15)" }}>
+          <Target size={20} style={{ color: T.gold }} />
+        </div>
+        <span className="text-xs font-bold tracking-wide" style={{ color: T.gold }}>TODAY'S CHALLENGE</span>
+        <p className="text-sm" style={{ color: T.inkMuted }}>Complete today's trip with:</p>
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex items-center gap-2 justify-center">
+            <Check size={14} style={{ color: met.safety ? T.green : T.inkFaint }} />
+            <span className="text-sm" style={{ color: met.safety ? T.ink : T.inkFaint }}>Safety &gt; 80</span>
+          </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Check size={14} style={{ color: met.income ? T.green : T.inkFaint }} />
+            <span className="text-sm" style={{ color: met.income ? T.ink : T.inkFaint }}>{cfg.labels.money.label} &gt; ₹{cfg.challengeIncome.toLocaleString("en-IN")}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl px-4 py-2" style={{ background: T.panel }}>
+          <Sparkles size={14} style={{ color: T.gold }} />
+          <span className="text-sm font-semibold" style={{ color: T.gold }}>{(met.safety && met.income) ? "+100 XP Reward" : "Try again tomorrow"}</span>
+        </div>
+        <div className="w-full pt-2"><Btn onClick={onNext} color={T.cyan} icon={ChevronRight}>BACK TO DASHBOARD</Btn></div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------- Root ----------------------- */
+
+function OceanDecisionGame() {
+  const [screen, setScreen] = useState("splash");
+  const [prevScreen, setPrevScreen] = useState("dashboard");
+  const [language, setLanguage] = useState("English");
+  const [role, setRole] = useState(null);
+  const [dayNumber, setDayNumber] = useState(1);
+  const [playerState, setPlayerState] = useState(FISHERMAN_START);
+  const [boatLevel, setBoatLevel] = useState(1);
+  const [shopOwned, setShopOwned] = useState({ fuelTank: false, gps: false, safetyKit: false });
+  const [settings, setSettings] = useState({ sound: true, music: true, vibration: true, notifications: true, language: "English" });
+  const [stats, setStats] = useState({ daysPlayed: 0, totalScore: 0, bestScore: 0, goodDecisions: 0, longestStreak: 0 });
+
+  const [dayPhase, setDayPhase] = useState("overview"); // overview | main | outcome | complete | challenge
+  const [stepIndex, setStepIndex] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [pendingDecision, setPendingDecision] = useState(null);
+  const [pendingEffects, setPendingEffects] = useState(null);
+  const [dayHistory, setDayHistory] = useState([]);
+
+  const cfg = ROLE_CONFIGS[role?.id] || ROLE_CONFIGS.fisherman;
+  const step = cfg.dayFlow[stepIndex];
+  const isLastStep = stepIndex === cfg.dayFlow.length - 1;
+
+  function goto(id) { setPrevScreen(screen); setScreen(id); }
+
+  function handlePickRole(r) {
+    const c = ROLE_CONFIGS[r.id];
+    setRole(r);
+    setPlayerState(c.startState);
+    setShopOwned(Object.fromEntries(c.shopItems.map((i) => [i.id, false])));
+    setBoatLevel(1);
+    setDayNumber(1);
+    setStats({ daysPlayed: 0, totalScore: 0, bestScore: 0, goodDecisions: 0, longestStreak: 0 });
+    goto("dashboard");
+  }
+
+  function handleStartDay() {
+    setPlayerState((p) => ({
+      ...p,
+      safety: 100,
+      fuel: clamp(100 + (shopOwned[cfg.fuelBonusItem.id] ? cfg.fuelBonusItem.amount : 0) + boatLevel * 5, 0, 100),
+    }));
+    setStepIndex(0);
+    setDayPhase("overview");
+    setDayHistory([]);
+    setScreen("day");
+  }
+
+  function handleDecide(decision) {
+    const nextState = applyEffects(playerState, decision.effects, decision.outcome);
+    setPendingDecision(decision);
+    setPendingEffects(decision.effects);
+    setPlayerState(nextState);
+    setDayHistory((h) => [...h, { decision }]);
+    setDayPhase("outcome");
+  }
+
+  function goNextStep() {
+    const next = stepIndex + 1;
+    if (next >= cfg.dayFlow.length) {
+      setDayPhase("complete");
+    } else {
+      setStepIndex(next);
+      setDayPhase("main");
+    }
+  }
+
+  function handleDayCompleteContinue() { setDayPhase("challenge"); }
+
+  function handleChallengeNext() {
+    const dayIncome = dayHistory.reduce((s, h) => s + Math.max(0, h.decision.effects.money), 0);
+    const good = dayHistory.filter((h) => h.decision.outcome === "safe" || h.decision.outcome === "moderate").length;
+    const total = Math.round((playerState.safety + playerState.fuel) / 2);
+    setStats((s) => ({
+      daysPlayed: s.daysPlayed + 1,
+      totalScore: s.totalScore + total,
+      bestScore: Math.max(s.bestScore, total),
+      goodDecisions: s.goodDecisions + good,
+      longestStreak: playerState.safety > 80 ? s.longestStreak + 1 : 0,
+    }));
+    setDayNumber((d) => d + 1);
+    goto("dashboard");
+  }
+
+  function handleBuy(id, price) {
+    if (playerState.money < price) return;
+    setPlayerState((p) => ({ ...p, money: p.money - price }));
+    setShopOwned((o) => ({ ...o, [id]: true }));
+  }
+
+  function handleUpgrade(cost) {
+    if (playerState.money < cost) return;
+    setPlayerState((p) => ({ ...p, money: p.money - cost }));
+    setBoatLevel((l) => l + 1);
+  }
+
+  const dayIncomeSoFar = dayHistory.reduce((s, h) => s + Math.max(0, h.decision.effects.money), 0);
+  const challengeMet = { safety: playerState.safety > 80, income: dayIncomeSoFar > cfg.challengeIncome };
+
+  function renderDay() {
+    if (dayPhase === "overview") return <DayOverview cfg={cfg} dayNumber={dayNumber} playerState={playerState} firstScenario={cfg.scenarios[0]} onContinue={() => setDayPhase("main")} />;
+    if (dayPhase === "complete") return <DayComplete cfg={cfg} dayNumber={dayNumber} playerState={playerState} dayHistory={dayHistory} onContinue={handleDayCompleteContinue} />;
+    if (dayPhase === "challenge") return <DailyChallenge cfg={cfg} met={challengeMet} onNext={handleChallengeNext} />;
+
+    if (showMap) return <MapView cfg={cfg} scenario={step.scenario || cfg.scenarios[0]} onBack={() => setShowMap(false)} />;
+
+    if (dayPhase === "outcome" && pendingDecision) {
+      return <OutcomeScreen cfg={cfg} decision={pendingDecision} effects={pendingEffects} onContinue={goNextStep} isLastAction={isLastStep} />;
+    }
+    if (step.type === "decision") {
+      return <DecisionCard cfg={cfg} scenario={step.scenario} playerState={playerState} onDecide={handleDecide} onMap={() => setShowMap(true)} />;
+    }
+    if (step.type === "event") {
+      return <RandomEventCard event={cfg.randomEvent} onDecide={handleDecide} />;
+    }
+    if (step.type === "advisory") {
+      return <AdvisoryPop advisory={cfg.advisoryPop} onCheck={goNextStep} />;
+    }
+    return null;
+  }
+
+  let body = null;
+  if (screen === "splash") body = <Splash onPlay={() => goto("role")} language={language} setLanguage={setLanguage} />;
+  else if (screen === "role") body = <RoleSelect onPick={handlePickRole} />;
+  else if (screen === "dashboard") body = <Dashboard role={role} cfg={cfg} playerState={playerState} dayNumber={dayNumber} boatLevel={boatLevel} onStartDay={handleStartDay} onNav={goto} />;
+  else if (screen === "shop") body = <Shop cfg={cfg} money={playerState.money} owned={shopOwned} onBuy={handleBuy} onNav={goto} />;
+  else if (screen === "stats") body = <Stats stats={stats} onNav={goto} />;
+  else if (screen === "profile") body = <Profile role={role} playerState={playerState} boatLevel={boatLevel} onNav={goto} />;
+  else if (screen === "achievements") body = <Achievements cfg={cfg} stats={stats} onBack={() => goto("profile")} />;
+  else if (screen === "boatupgrade") body = <BoatUpgrade cfg={cfg} boatLevel={boatLevel} money={playerState.money} onUpgrade={handleUpgrade} onBack={() => goto("profile")} />;
+  else if (screen === "settings") body = <Settings settings={settings} setSettings={setSettings} onBack={() => goto(prevScreen === "dashboard" ? "dashboard" : "profile")} />;
+  else if (screen === "howtoplay") body = <HowToPlay onBack={() => goto("profile")} />;
+  else if (screen === "exitconfirm") body = <ExitConfirm onCancel={() => goto("profile")} onExit={() => { setScreen("splash"); setRole(null); }} />;
+  else if (screen === "day") body = renderDay();
+
+  return (
+    <div className="w-screen h-screen flex items-center justify-center relative overflow-hidden" style={{ background: T.bgDeep, fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
+      <GlobalStyle />
+      <AmbientOcean />
+      <a href="../index.html"
+        className="sw-press"
+        style={{
+          position: "fixed", top: 16, left: 16, zIndex: 999,
+          background: "rgba(9,26,46,0.85)", color: T.ink,
+          padding: "9px 16px", borderRadius: 24,
+          border: `1px solid ${T.lineStrong}`, textDecoration: "none",
+          fontWeight: 700, fontSize: 12.5, letterSpacing: "0.03em",
+          display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(6px)",
+        }}>
+        <ArrowLeft size={14} /> Home
+      </a>
+      <div
+        className="relative z-10 flex flex-col overflow-hidden"
+        style={{
+          width: "min(480px, 94vw)",
+          height: "min(900px, 94vh)",
+          background: T.bg,
+          borderRadius: 28,
+          boxShadow: `0 0 0 1px ${T.lineStrong}, 0 40px 90px -20px rgba(0,0,0,0.7)`,
+        }}
+      >
+        {body}
+      </div>
+    </div>
+  );
+}
+
+const root = createRoot(document.getElementById("root"));
+root.render(<OceanDecisionGame />);
+</script>
+
+</body>
+</html>
